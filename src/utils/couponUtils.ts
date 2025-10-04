@@ -1,4 +1,4 @@
-import { OfferDocument } from "../types/offer";
+import { OfferDocument, OfferIncomingDTO } from "../types/offer";
 import { CartItemIncomingDTO } from "../types/cart";
 
 export const isCouponExpired = (coupon:OfferDocument):boolean =>{
@@ -52,4 +52,18 @@ export const calculateDiscountAmount = (coupon:OfferDocument,
          return { finalAmount, discountAmount };
     }
      return { finalAmount: applicableTotal, discountAmount: 0 };
+}
+
+
+// used in offercontrollers 
+
+export function makeQueryForOffer({data}:{data:Partial<OfferIncomingDTO>}){
+         let query: Partial<OfferIncomingDTO> = {};
+        if (typeof data.expiresAt !== "undefined") query.expiresAt = data.expiresAt;
+        if (typeof data.value !== "undefined") query.value = data.value;
+        if (typeof data.appliesToCategories !== "undefined")
+          query.appliesToCategories = data.appliesToCategories;
+        if (typeof data.usageLimit !== "undefined") query.usageLimit = data.usageLimit;
+
+        return query;
 }

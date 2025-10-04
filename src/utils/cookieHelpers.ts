@@ -19,3 +19,15 @@ export const setAuthCookies = (res: Response, access: string | null, refresh: st
     path: "/",
   });
 };
+
+
+export const setAdminAuthCookie = (res:Response,access:string | null)=>{
+   const isProd = process.env.NODE_ENV === "production";
+  res.cookie('adminToken',access,{
+ httpOnly:true,
+ sameSite:"strict",
+ secure:isProd,
+ maxAge:30 * 24 * 60 * 60 * 1000,
+ path:"/"
+  })
+}

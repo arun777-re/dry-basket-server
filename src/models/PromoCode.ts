@@ -1,17 +1,15 @@
-import { OfferDocument } from '../types/offer';
+import { OfferSchemaDTO } from '../types/offer';
 import mongoose from 'mongoose';
 
 
-const offerSchema = new mongoose.Schema<OfferDocument>({
+const offerSchema = new mongoose.Schema<OfferSchemaDTO>({
     code:{
         type:String,
         required:true,
-        unique:true,
         uppercase:true,
         trim:true,
         minlength:6,
         maxlength:12,
-        index:true
     },
     description:String,
     discountType:{
@@ -48,9 +46,14 @@ const offerSchema = new mongoose.Schema<OfferDocument>({
         required:false,
         default:true,
     }
-},{timestamps:true});
+},{timestamps:true,optimisticConcurrency:true});
 
 
+//adding index to code field This will help in faster lookups and ensure that no two offers can have the same code
+offerSchema.index({code:1},{unique:true});
+offerSchema.index({expiresAt:1},{expireAfterSeconds:0}); // This will automatically remove offers that have expired
+offerSchema.index({active:1});
+offerSchema.index({appliesToCategories:1});
 const Offer = mongoose.models.Offer || mongoose.model('Offer',offerSchema);
 
 export default Offer;

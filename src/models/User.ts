@@ -20,18 +20,22 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    password: {
+   password: {
       type: String,
       required: true,
+      trim:true,
+      minLength:[6,'Password must have 6 charactrers'],
+      maxLength:[10,'Password cannot be large than 10 charactres'],
+      validate: {
+        validator: (values: string) => {
+          return  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).{6,10}$/.test(values);
+        },
+        message: `Password must be 6-10 characters must include uppercase,number,special characters,lowercase`,
+      },
     },
     isActive: {
       type: Boolean,
       default:false,
-    },
-    phone: {
-      type:String,
-      required: true,
-      unique: false,
     },
   },
   { timestamps: true, validateBeforeSave: true }

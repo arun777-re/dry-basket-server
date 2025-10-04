@@ -2,31 +2,33 @@ import { dbConnect } from "../../db";
 dbConnect();
 import { Request, Response } from "express";
 
-import { buildTree, createResponse, handleError } from "../../utils/heplers";
-import { Category } from "../../models";
+import { createResponse, handleError } from "../../utils/heplers";
 import slugify from "slugify";
 import { v4 as uuid } from "uuid";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
+import { CategoryService } from "../../services/category/categoryservice";
+import { PaginationQuery } from "../../types/response";
+
+const catservices = new CategoryService();
 
 export const createCategory = async (req: Request, res: Response) => {
+  // getting body as json from frontend
+  const { name, parent } = req.body;
+
+  if (!name || typeof name !== "string") {
+    createResponse({
+      success: false,
+      status: 400,
+      message: "Category Name is required",
+      res,
+    });
+    return;
+  }
   try {
-    // getting body as json from frontend
-    const { name, parent } = req.body;
-
-    if (!name || typeof name !== "string") {
-      createResponse({
-        success: false,
-        status: 400,
-        message: "Category Name is required",
-        res,
-      });
-      return;
-    }
-
     // Resolve parentId if parent name is provided
-    let parentId = null;
-    if (parent) {
-      const parentcat = await Category.findOne({ name: parent });
+    let parentId: string | Types.ObjectId | undefined;
+    if (parent && parent !== "") {
+      const parentcat = await catservices.FINDPARENT_CATEGORY(parent);
       if (!parentcat) {
         createResponse({
           success: false,
@@ -40,10 +42,7 @@ export const createCategory = async (req: Request, res: Response) => {
     }
 
     // Check for existing category with same name and resolved parentId
-    const exists = await Category.findOne({
-      name: { $regex: new RegExp(`^${name}$`, "i") },
-      parent: parentId,
-    });
+    const exists = await catservices.IS_CATEGORY_Exists(name, parentId);
     if (exists) {
       createResponse({
         success: false,
@@ -61,11 +60,20 @@ export const createCategory = async (req: Request, res: Response) => {
     });
 
     // create category
-    const category = await Category.create({
+    const category = await catservices.CREATE_CATEGORY({
       name,
       parent: parentId,
       slug,
     });
+    if (!category) {
+      createResponse({
+        success: false,
+        status: 500,
+        message: "Category creation failed",
+        res,
+      });
+      return;
+    }
 
     createResponse({
       success: true,
@@ -76,6 +84,17 @@ export const createCategory = async (req: Request, res: Response) => {
     });
     return;
   } catch (error: any) {
+    if (error.name === "ValidationError" && error.errors) {
+      const messages = Object.values(error.errors).map(
+        (val: any) => val.message
+      );
+      handleError(messages.join(", "), res);
+      return;
+    }
+    if (error.name === "CastError" && error.path === "parent") {
+      return handleError("Invalid parent category ID", res);
+    }
+
     if (error instanceof Error) {
       handleError(error, res);
       return;
@@ -85,54 +104,23 @@ export const createCategory = async (req: Request, res: Response) => {
   }
 };
 
-// delete the main parent category 
+// delete the main parent category
 export const deleteCategory = async (req: Request, res: Response) => {
+  const { catId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(catId)) {
+    createResponse({
+      success: false,
+      message: "Invalid category ID",
+      status: 400,
+      res,
+    });
+    return;
+  }
   try {
-    const { catId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(catId)) {
-       createResponse({
-        success: false,
-        message: "Invalid category ID",
-        status: 400,
-        res,
-      });
-      return;
-    }
-
-    const result = await Category.aggregate([
-      {
-        $match: { _id: new mongoose.Types.ObjectId(catId) }
-      },
-      {
-        $graphLookup: {
-          from: "categories",
-          startWith: "$_id",
-          connectFromField: "_id",
-          connectToField: "parent",
-          as: "descendants"
-        }
-      },
-      {
-        $project: {
-          allIds: {
-            $concatArrays: [
-              ["$_id"],
-              {
-                $map: {
-                  input: "$descendants",
-                  as: "desc",
-                  in: "$$desc._id"
-                }
-              }
-            ]
-          }
-        }
-      }
-    ]);
-
+    const result = await catservices.FIND_CATEGORY_AGGREGATION(catId);
     if (!result.length) {
-       createResponse({
+      createResponse({
         success: false,
         message: "Category not found",
         status: 404,
@@ -143,16 +131,26 @@ export const deleteCategory = async (req: Request, res: Response) => {
 
     const allIdsToDelete = result[0].allIds;
 
-    await Category.deleteMany({ _id: { $in: allIdsToDelete } });
+    const deleteOperation = await catservices.DELETE_CATEGORY(allIdsToDelete);
+    if (!deleteOperation) {
+      createResponse({
+        success:false,
+        message: `Something wrong during delete category`,
+        status:404,
+        res,
+      });
+      return;
+    }
 
-     createResponse({
+    createResponse({
       success: true,
-      message: `Deleted category and its ${allIdsToDelete.length - 1} subcategories.`,
+      message: `Deleted category and its ${
+        allIdsToDelete.length - 1
+      } subcategories.`,
       status: 200,
       res,
     });
     return;
-
   } catch (error) {
     if (error instanceof Error) {
       handleError(error, res);
@@ -165,21 +163,9 @@ export const deleteCategory = async (req: Request, res: Response) => {
 // get all category using aggregate method and recursive method $graphLookup to get all category in a flat array.
 export const getAllCategory = async (req: Request, res: Response) => {
   try {
-
-    const allCategories = await Category.aggregate([
-  { $match: { parent: null } },
-  {
-    $graphLookup: {
-      from: "categories",
-      startWith: "$_id",
-      connectFromField: "_id",
-      connectToField: "parent",
-      as: "children"
-    }
-  }
-])
-
-    if (allCategories.length === 0) {
+    const query = req.query as unknown as PaginationQuery;
+    const allCategories = await catservices.FIND_ALL_CATEGORY(query);
+    if (!allCategories) {
       createResponse({
         success: true,
         message: "No category to show add new ",
@@ -188,20 +174,14 @@ export const getAllCategory = async (req: Request, res: Response) => {
       });
       return;
     }
-
-    const nestedCategories = allCategories.map(cat =>{
-      return {
-        _id:cat._id,
-        name:cat.name,
-        parent:cat.parent,
-        children:buildTree(cat._id,cat.children)
-      }
-    })
     createResponse({
       success: true,
       message: "Fetched categories are",
       status: 200,
-      data:nestedCategories,
+      data: allCategories.products,
+      hasNextPage: allCategories.hasNextPage,
+      hasPrevPage: allCategories.hasPrevPage,
+      currentPage: allCategories.currentPage,
       res,
     });
     return;
@@ -214,5 +194,3 @@ export const getAllCategory = async (req: Request, res: Response) => {
     return;
   }
 };
-
-

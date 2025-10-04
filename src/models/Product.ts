@@ -1,4 +1,4 @@
-import { ProductDocument } from "../types/product";
+import { ProductDocument, ProductVariant } from "../types/product";
 import mongoose from "mongoose";
 
 
@@ -16,6 +16,7 @@ const variantSchema = new mongoose.Schema({
           default: 1,
           max: [99999, "Stock cannot exceeds 5 characters"],
         },
+        sold:{type:Number,default:0},
         discount: { type: Number, default: 0},  
         discountExpiry: {
           type: Date,

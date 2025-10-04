@@ -16,3 +16,10 @@ export interface UserProps{
 export interface UserDocument extends Document,UserProps{
     comparePassword(candidatePassword:string):Promise<boolean>;
 }
+
+export interface UserOutgoingReqDTO {
+    firstName: string;
+    lastName: string;
+    email: string;
+    isActive:boolean;
+} 

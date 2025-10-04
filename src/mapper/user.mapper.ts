@@ -10,3 +10,4 @@ export const toPublicUserDTO = (user: UserProps): PublicUserDTO => ({
   phone: user.phone,
   isActive: user.isActive,
 });
+

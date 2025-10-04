@@ -1,11 +1,11 @@
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 import { OrderSchemaDTO } from "../types/order";
 
 const orderSchema = new mongoose.Schema<OrderSchemaDTO>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
     },
     cartId: {
@@ -13,6 +13,16 @@ const orderSchema = new mongoose.Schema<OrderSchemaDTO>(
       ref: "Cart",
       required: true,
     },
+   cartItems: [
+  {
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    categoryOfProduct: { type: String, required: true },
+    quantity: { type: Number, required: true },
+    variant: { type: mongoose.Schema.Types.Mixed }, // or a sub-schema
+    addedAtPrice: { type: Number, required: true },
+    subtotal: { type: Number },
+  },
+],
     shippingDetails: {
       country: {
         type: String,
@@ -46,19 +56,48 @@ const orderSchema = new mongoose.Schema<OrderSchemaDTO>(
         type: String,
         required: true,
       },
+      phone:{
+        type:String,
+        required:true,
+      }
     },
-    status: {
+    orderStatus: {
       type: String,
       enum: ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"],
       default: "PENDING",
     },
+    paymentStatus:{
+      type:String,
+      enum:["PENDING","COMPLETED","FAILED"],
+      default:"PENDING"
+    },
+    blogsAgree:{type:Boolean,required:false},
     amount:{type:Number,required:true},
+    shippingCharges:{type:Number,required:true,default:0},
     currency:{type:String,required:true},
     receipt:{type:String,required:false},
     notes:[{type:String,required:false}],
-    razorpayOrderId:{type:String,required:true}
+    razorpayOrderId:{type:String,required:true},
+    paymentId:{type:String,required:false},
+    paymentType:{type:String,default:"PREPAID",
+      enum:["PREPAID","COD"]  
+    },
+     // fields for shipmozo integration for shipping 
+    courierInfo:{
+    courierName:{type:String,default:null},
+    courierTrackingId:{type:String,default:null},
+    awbNumber:{type:String,index:true,default:null},
+    estimatedDeliveryDate:{type:Date,default:null},
+    shipmentOrderId:{type:String,default:null}
   },
-  { timestamps: true }
+  trackingHistory:[{
+    status:{type:String,required:true},
+    location:{type:String,required:true},
+    timeStamp:{type:Date,default:Date.now},
+  }]
+  },
+ 
+  { timestamps: true,optimisticConcurrency:true }
 );
 
 orderSchema.index({ userId: 1, status: 1 });

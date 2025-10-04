@@ -51,6 +51,7 @@ export interface CartOutoingDTO {
   total: number;
   coupon?: CouponInfoDTO[]; // allow multiple if needed
   finalTotal: number;
+  totalWeight:number;
   createdAt?: Date;
   updatedAt?: Date;
   __v?: number;
@@ -85,6 +86,7 @@ export interface PopulatedCartDTO {
   variant:CommonVariantDTO;
   coupon?: CouponInfoDTO[];
   finalTotal: number;
+  totalWeight:number;
   createdAt?: Date;
   updatedAt?:Date;
   __v?:number;

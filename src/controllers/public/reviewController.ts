@@ -10,24 +10,17 @@ import { ReviewServiceClass } from "../../services/reviewService";
 import { CustomReq } from "../../types/customreq";
 import { cacheServices } from "../../services/redis/cache";
 import { OutgoingReviewDTO } from "../../types/review";
+import { validateId } from "../../utils/cartUtils";
 const productservice = new ProductBusinessService();
 const reviewService = new ReviewServiceClass();
 
 export const createReview = async (req: CustomReq, res: Response) => {
-  try {
-    const { productId } = req.query;
+   const { productId } = req.query;
     const userId = req?.user?._id!;
     const { rating, reviewText } = req.body;
 
-    if (!productId || !mongoose.Types.ObjectId.isValid(productId as string)) {
-      createResponse({
-        success: false,
-        message: "Provide appropriate product data to review",
-        status: 400,
-        res,
-      });
-      return;
-    }
+ validateId(productId as string)
+  try {
 
     const userReview = await runWithRetryTransaction(
       async (session: ClientSession) => {
@@ -103,16 +96,7 @@ export const getAllReviews = async (req: Request, res: Response) => {
     const { productId } = req.query;
 
     // check whether provided id id a valid mongoose id
-    if (!productId || !mongoose.Types.ObjectId.isValid(productId as string)) {
-      createResponse({
-        success: false,
-        message: "Provide appropriate product data to review",
-        status: 400,
-        res,
-      });
-      return;
-    }
-
+    validateId(productId as string)
     // check whether product exists or not for provided id
     const isExits = await productservice.getProductById({
       productId: productId as string,
@@ -139,10 +123,11 @@ export const getAllReviews = async (req: Request, res: Response) => {
 
     if (!result || result.length === 0) {
       createResponse({
-        success: false,
+        success: true,
         message: "No reviews found yet",
-        status: 404,
+        status:200,
         res,
+        data:[]
       });
       return;
     }

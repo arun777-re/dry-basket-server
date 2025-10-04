@@ -8,7 +8,7 @@ import {
 import slugify from "slugify";
 import { v4 as uuid } from "uuid";
 import { ProductService } from "../../services/productService";
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 const ServiceClass = new ProductService();
 
@@ -114,7 +114,8 @@ export const deleteProduct = async(req:Request,res:Response)=>{
   try {
       const slug = req.params.slug?.trim();
       if(!slug){
-        session.abortTransaction();
+       await session.abortTransaction();
+         session.endSession()
         createResponse({
           success:false,
           message:"Provide proper data of slug to delete",
@@ -127,7 +128,8 @@ export const deleteProduct = async(req:Request,res:Response)=>{
       const result = await ServiceClass.deleteProductService({slug,session:session});
 
       if(!result){
-        session.abortTransaction();
+       await session.abortTransaction();
+        session.endSession()
            createResponse({
           success:false,
           message:"Product deletion operation failed",
@@ -136,7 +138,7 @@ export const deleteProduct = async(req:Request,res:Response)=>{
         });
         return;
       }
-session.commitTransaction();
+     await session.commitTransaction();
        createResponse({
           success:true,
           message:result.message,
@@ -145,7 +147,7 @@ session.commitTransaction();
         });
         return;
   } catch (error) {
-    session.abortTransaction();
+    await session.abortTransaction();
     handleError(error,res);
   }finally{
     session.endSession();
@@ -189,7 +191,8 @@ variants = JSON.parse(variants)
    },session});
 
     if (!result) {
-      session.abortTransaction();
+      await session.abortTransaction();
+      session.endSession()
       createResponse({
         success: false,
         status: 404,
@@ -198,7 +201,8 @@ variants = JSON.parse(variants)
       });
       return;
     }
-session.commitTransaction();
+await session.commitTransaction();
+
     createResponse({
       success: true,
       status: 200,
@@ -239,8 +243,9 @@ const allProducts = await ServiceClass.getAllProducts({query:query});
       createResponse({
         success: false,
         message: "No Products created yet.",
-        status: 404,
+        status:200,
         res,
+        data:[]
       });
       return;
     }

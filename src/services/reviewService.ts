@@ -42,10 +42,9 @@ export class ReviewServiceClass {
           },
         },
       ]);
-
       const avgRating = result[0]?.avgRating || 0;
 
-      await Product.findByIdAndUpdate(productId, { avgRating }, { session });
+      await Product.findByIdAndUpdate(productId, {$set:{avgRating:avgRating }}, { session });
     } catch (error) {
       console.error(error instanceof Error ? error.message : error);
       throw new Error("Error during update product");

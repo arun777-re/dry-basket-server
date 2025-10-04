@@ -1,18 +1,7 @@
 import { PopulatedCartDTO, CartMongooseDocument, CartItemIncomingDTO, CartIncomingDTO } from "../../types/cart";
-import { OfferDocument } from "../../types/offer";
 import { Cart} from "../../models";
 import { cartItemSchema } from "../../validations/cart.validation";
-import mongoose, { ClientSession, Types} from "mongoose";
-import {
-  calculateDiscountAmount,
-  calculateItemPrice,
-  getApplicableAndNotApplicableItems,
-  getCouponApplicableCategories,
-  isCouponActive,
-  isCouponExpired,
-  isMinOrderAmountSatisfied,
-} from "../../utils/couponUtils";
-import { getOfferByCode } from "./../couponService";
+import { ClientSession, Types} from "mongoose";
 
 
 type ApplyCouponResult =

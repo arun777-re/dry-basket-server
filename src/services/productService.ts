@@ -9,10 +9,13 @@ import {
 } from "../types/product";
 import { escapeRegex, pagination } from "../utils/heplers";
 import { SimpleCategoryServices } from "./categoryServices";
+import { PaginationQuery } from "../types/response";
+import { CategoryService } from "./category/categoryservice";
 
 
 
 const categoryservice = new SimpleCategoryServices();
+const categoriesservice = new CategoryService()
 
 // services for simple use
 
@@ -45,12 +48,13 @@ export class SimpleProductService {
     featured: boolean;
   }): Promise<PaginatedResult<ProductOutgoingRequest> | null> {
     try {
-      const { skip, limit, currentPage, hasNextPage, hasPrevPage } =
-        await pagination({ query: query, model: Product });
       let filterQuery: Record<string, any> = { category: catId };
       if (featured) {
         filterQuery.isFeatured = true;
       }
+      const { skip, limit, currentPage, hasNextPage, hasPrevPage } =
+        await pagination({ query: query, model: Product,filter:filterQuery });
+      
       // get all featured products related to a category
       const products = await Product.find(filterQuery)
         .sort({ createdAt: -1 })
@@ -73,58 +77,57 @@ export class SimpleProductService {
     }
   }
 
-  //   get all products for search query
-  async getProductsBySearchQuery({
+  //   get all products for search filter query
+  async getProductsByFilterQuery({
     searchQueryIncoming,
   }: {
     searchQueryIncoming: SearchQuery;
   }): Promise<PaginatedResult<ProductOutgoingRequest> | null> {
     try {
+       const { category = "", price, productName = "" ,weight = ""} = searchQueryIncoming;
+
+      // build dynamic searchParams
+      let searchQuery: Record<string, any> = {};
+
+      if (category && typeof category === "string") {
+        const categoryData = await categoriesservice.GET_LEAF_CATEGORIES(category);
+        if (categoryData) {
+          searchQuery.category = {$in:categoryData};
+        }
+      }
+
+   if (price || weight) {
+  let elemMatch: Record<string, any> = {};
+  if (price && !isNaN(price)) {
+    elemMatch.price = { $lte: Number(price) };
+  }
+  if (weight && !isNaN(weight)) {
+    elemMatch.weight = Number(weight);
+  }
+  searchQuery["variants"] = { $elemMatch: elemMatch };
+}
+
+      if (typeof productName === "string" && productName?.trim()) {
+        const safeProductName = escapeRegex(productName || "");
+        searchQuery.productName = { $regex: safeProductName, $options: "i" };
+      }
       const paginationQuery = {
         page: searchQueryIncoming.page,
         limit: searchQueryIncoming.limit,
       };
       const { skip, limit, currentPage, hasNextPage, hasPrevPage } =
-        await pagination({ query: paginationQuery, model: Product });
-
-      const { category = "", price, productName = "" } = searchQueryIncoming;
-
-      // build dynamic searchParams
-      let searchQuery: Record<string, any> = {};
-
-      if (typeof category === "string") {
-        const categoryData = await categoryservice.getCategoryWithName({
-          catname: category,
-        });
-        if (categoryData?._id) {
-          searchQuery.category = new mongoose.Types.ObjectId(categoryData._id);
-        }
-      }
-
-      if (price && !isNaN(price)) {
-        searchQuery["variants"] = {
-          $elemMatch: {
-            price: { $lte: Number(price) },
-          },
-        };
-      }
-
-      if (typeof productName === "string") {
-        const safeProductName = escapeRegex(productName || "");
-        searchQuery.productName = { $regex: safeProductName, $options: "i" };
-      }
+        await pagination({ query: paginationQuery, model: Product ,filter:searchQuery});
 
       // search product based on the query
       const searchProducts = await Product.find(searchQuery)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .lean();
-
+        ;
       if (!searchProducts.length) return null;
 
       return {
-        products: searchProducts as unknown as ProductOutgoingRequest[],
+        products: searchProducts.map((item)=> item.toJSON()) as unknown as ProductOutgoingRequest[],
         hasNextPage,
         hasPrevPage,
         currentPage,
@@ -135,6 +138,51 @@ export class SimpleProductService {
     }
   }
 
+  // get all products based on navbar search 
+  async getProductsByNavbarSearch({searchQuery}:{searchQuery:{searchValue:string} & PaginationQuery})
+  :Promise<PaginatedResult<ProductOutgoingRequest> | null>{
+    try{
+      
+      const safeProductName = escapeRegex(searchQuery.searchValue || "");
+      let categoryId:Types.ObjectId | string = "";
+        const categoryData = await categoryservice.getCategoryWithName({
+          catname:safeProductName});
+        if (categoryData?._id) {
+          categoryId = new mongoose.Types.ObjectId(categoryData._id);
+        }
+      const searchQueryFilter = { $or:[
+        {productName:{$regex:safeProductName,$options:"i"}},
+        {category:categoryId }
+      ]
+    };
+      const query = {
+        page:searchQuery.page,
+        limit:searchQuery.limit
+      }
+         const { skip, limit, currentPage, hasNextPage, hasPrevPage } =
+        await pagination({ query, model: Product,filter:searchQueryFilter });
+    const searchProducts = await Product.find(searchQueryFilter).sort({createdAt:-1}).
+    skip(skip).limit(limit);
+    if(!searchProducts.length) {
+     return {
+        products:[],
+        hasNextPage,
+        hasPrevPage,
+        currentPage,
+      };
+    };
+    return {
+        products: searchProducts.map((item)=> item.toJSON()) as unknown as ProductOutgoingRequest[],
+        hasNextPage,
+        hasPrevPage,
+        currentPage,
+      };
+
+    }catch(error){
+         console.error("Error occured during get products by navbar search query", error);
+      throw new Error("Error during get products using navbar search query");
+    }
+  }
   //   get related products service
   async getRelatedByQuery({
     paginationQuery,
@@ -144,10 +192,7 @@ export class SimpleProductService {
     searchQueryIncoming: SearchQuery;
   }): Promise<PaginatedResult<ProductOutgoingRequest> | null> {
     try {
-      const { skip, limit, currentPage, hasNextPage, hasPrevPage } =
-        await pagination({ query: paginationQuery, model: Product });
-
-      const { category = "", price, productName = "" } = searchQueryIncoming;
+       const { category = "", price, productName = "" } = searchQueryIncoming;
 
       // build dynamic searchParams
       let searchQuery: Record<string, any> = {};
@@ -163,18 +208,21 @@ export class SimpleProductService {
       if (typeof productName === "string") {
         searchQuery.productName = { $ne: productName };
       }
+      const { skip, limit, currentPage, hasNextPage, hasPrevPage } =
+        await pagination({ query: paginationQuery, model: Product,filter:searchQuery });
+
+     
 
       // search product based on the query
       const searchProducts = await Product.find(searchQuery)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .lean();
 
       if (!searchProducts.length) return null;
 
       return {
-        products: searchProducts as unknown as ProductOutgoingRequest[],
+        products: searchProducts.map((item)=> item.toJSON()) as unknown as ProductOutgoingRequest[],
         hasNextPage,
         hasPrevPage,
         currentPage,
@@ -182,6 +230,15 @@ export class SimpleProductService {
     } catch (error) {
       console.error("Error occured during get products by search query", error);
       throw new Error("Error during get products using search query");
+    }
+  }
+  async getAllWeightsOfProducts (){
+    try {
+      const weight = await Product.distinct("variants.weight");
+      return weight.sort((a,b)=>a-b);
+    } catch (error) {
+         console.error("Error during get weights of all products", error);
+      throw new Error("Error during get weights of all products");
     }
   }
 }
@@ -283,10 +340,10 @@ export class ProductService {
         .sort({ createdAt: -1 })
         .limit(limit)
         .skip(skip)
-        .lean();
+        ;
 
       if (!products) return null;
-      return { products: products, currentPage, hasPrevPage, hasNextPage };
+      return { products: products.map((i)=> i.toJSON()) as unknown as ProductOutgoingRequest[], currentPage, hasPrevPage, hasNextPage };
     } catch (error) {
       console.error(`[ProductService][Get All] Error:`, error);
       throw new Error("Error during fetching products");

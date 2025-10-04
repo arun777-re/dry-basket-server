@@ -1,12 +1,13 @@
 import { redisClient } from "../../config/redis";
 import { RedisCacheDTO } from "../../types/cache";
+import { cacheKeyForLoginAttempts } from "../../utils/cacheKeyUtils";
 
 
 export const cacheServices:RedisCacheDTO = {
   async set<T>(key:string,value:T,ttlSeconds?:number){
     const serialized = JSON.stringify(value);
     if(ttlSeconds){
-        await redisClient.setEx(key,ttlSeconds,serialized);
+        await redisClient.setex(key,ttlSeconds,serialized);
     }else{
         await redisClient.set(key,serialized);
     }
@@ -27,8 +28,8 @@ export const cacheServices:RedisCacheDTO = {
 async setIfNotExists<T>(key:string,value:T,ttlSeconds?:number){
     const serialized = JSON.stringify(value);
     const result = ttlSeconds ? 
-    await redisClient.set(key,serialized,{condition:'NX',expiration:{type:'EX',value:ttlSeconds}}) :
-    await redisClient.set(key,serialized,{condition:'NX'});
+    await redisClient.set(key,serialized,'EX',ttlSeconds,"NX") :
+    await redisClient.set(key,serialized,'NX');
 
     return result === 'OK'
 },
@@ -64,4 +65,14 @@ retryDelay = 50) {
   }
    return updatedValue!;
 },
+}
+
+// function to reduce malificious attacks using ip of client
+export async function checkRateLimit(ip:string,limit:number,ttl:number){
+  const key = cacheKeyForLoginAttempts(ip as string);
+      const attempts = await redisClient.incr(key);
+      if(attempts === 1){
+        await redisClient.expire(key,ttl);
+      }
+      return attempts <= limit;
 }

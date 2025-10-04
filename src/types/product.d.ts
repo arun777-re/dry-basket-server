@@ -9,6 +9,7 @@ export interface ProductVariant {
     weight:number;
     price:number;
     stock:number;
+    sold?:number;
     discount?:number;
     discountExpiry?:Date | null;
     priceAfterDiscount?:number;
@@ -55,6 +56,7 @@ export interface SearchQuery {
   productName?: string;
   page?: number;
   limit?: number;
+  weight?:number;
 }
 
 export interface UpdateQuery {

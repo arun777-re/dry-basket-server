@@ -3,7 +3,7 @@
 type DiscountType = 'percentage' | 'flat'; 
 
 export interface OfferDocument {
-  _id:string,
+  _id?:string,
   code: string;
   description?: string;
   discountType:DiscountType;
@@ -18,18 +18,18 @@ export interface OfferDocument {
   updatedAt?: Date;
 }
 
-type Offer = OfferDocument & {
-  // Additional methods or properties can be added here
-};
-// version of form input fields for frontend
+type OfferMongooseDocument = Omit<OfferDocument,'createdAt' | 'updatedAt' > ;
+export interface OfferSchemaDTO extends Document, OfferMongooseDocument {}
 
-export interface OfferFormValues {
+// type for incoming offer data transfer document used when creating or updating offers
+export interface OfferIncomingDTO{
   code:string,
   description?:string,
   discountType:DiscountType,
   value:number,
   minOrderAmount?:number,
-  appliesToCategories?:string,
-  expiresAt:string;
+  appliesToCategories?:string[],
+  expiresAt?:Date | null,
   usageLimit:number,
+  __v?:number
 }

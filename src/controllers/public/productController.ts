@@ -9,6 +9,14 @@ import {
   PopulatedProduct,
   ProductOutgoingRequest,
 } from "../../types/product";
+import {
+  cacheKeyToGetAllCategoryProducts,
+  cacheKeyToGetFeaturedProducts,
+  cacheKeyToGetRecommendedProducts,
+  cacheKeyToGetRelatedProducts,
+  cacheKeyToGetFilterProducts,
+} from "../../utils/cacheKeyUtils";
+import { validateId } from "../../utils/cartUtils";
 // class call
 const ServiceClass = new SimpleProductService();
 
@@ -89,9 +97,7 @@ export const getAllFeaturedProduct = async (req: Request, res: Response) => {
       return;
     }
     // get all featured products by category
-    const cachekey = `featuredProducts:${isExists._id}:${JSON.stringify(
-      query
-    )}`;
+    const cachekey = cacheKeyToGetFeaturedProducts(query, isExists._id);
     let result = await cacheServices.get<PaginatedResult<PopulatedProduct>>(
       cachekey
     );
@@ -108,8 +114,9 @@ export const getAllFeaturedProduct = async (req: Request, res: Response) => {
       createResponse({
         success: false,
         message: "No Featured Product found yet",
-        status: 404,
+        status: 200,
         res,
+        data: [],
       });
       return;
     }
@@ -117,7 +124,7 @@ export const getAllFeaturedProduct = async (req: Request, res: Response) => {
     await cacheServices.set<PaginatedResult<PopulatedProduct>>(
       `featuredProducts:${isExists._id}:${JSON.stringify(query)}`,
       result,
-      60 * 60 * 12 // cache for 12 hours
+      60 * 30 // cache for 30mins
     );
     createResponse({
       success: true,
@@ -135,14 +142,15 @@ export const getAllFeaturedProduct = async (req: Request, res: Response) => {
   }
 };
 
-// get all products based on search
+// get all products based on search filter
 export const getSearchProducts = async (req: Request, res: Response) => {
-  try {
-    const { category, price, productName, page, limit } = req.query;
+   const { category, price, productName,weight, page, limit } = req.query;
     const safePage = parseFloat(page as string);
     const safeLimit = parseFloat(limit as string);
+    const safeWeight = parseFloat(weight as string);
+    const safeCatId = (category as string).trim()
     // false if one is provided
-    if (!category && !price && !productName) {
+    if (!category && !price && !productName && !safeWeight) {
       createResponse({
         success: false,
         message: "Provide atleast one product detail to search",
@@ -151,19 +159,23 @@ export const getSearchProducts = async (req: Request, res: Response) => {
       });
       return;
     }
-    const cacheKey = `searchProducts:${JSON.stringify({
-      category,
-      price,
-      productName,
-      page,
-      limit,
-    })}`;
+  try {
+   
+    validateId(safeCatId)
+    const cacheKey = cacheKeyToGetFilterProducts({
+      category: category as string,
+      price: price as string,
+      limit:safeLimit,
+      page:safeLimit,
+      productName:productName as string,
+      weight:weight as string
+    });
     let result = await cacheServices.get<
       PaginatedResult<ProductOutgoingRequest>
     >(cacheKey);
     if (!result) {
       // get all products based on search query
-      result = await ServiceClass.getProductsBySearchQuery({
+      result = await ServiceClass.getProductsByFilterQuery({
         searchQueryIncoming: {
           category: category as string,
           price: parseFloat(price as string),
@@ -205,6 +217,61 @@ export const getSearchProducts = async (req: Request, res: Response) => {
     return;
   }
 };
+// get all products based on search filter
+export const getProductsNavSearch = async (req: Request, res: Response) => {
+  try {
+    const { searchValue, page, limit } = req.query;
+    const safePage = parseFloat(page as string);
+    const safeLimit = parseFloat(limit as string);
+    // false if one is provided
+    if (!searchValue) {
+      createResponse({
+        success: false,
+        message: "Provide atleast one product detail to search",
+        status: 400,
+        res,
+      });
+      return;
+    }
+    const searchQuery = {
+      searchValue: searchValue as string,
+      page: safePage,
+      limit: safeLimit,
+    };
+    const result = await ServiceClass.getProductsByNavbarSearch({
+      searchQuery,
+    });
+
+    if (!result || !result.products.length) {
+      createResponse({
+        success:true,
+        message: "No items found related to your search",
+        status:200,
+        res,
+        data:[],
+        hasPrevPage:result?.hasPrevPage,
+        hasNextPage:result?.hasNextPage,
+        currentPage:result?.currentPage,
+
+      });
+      return;
+    }
+    createResponse({
+      success: true,
+      message: "Searched Products are",
+      status: 200,
+      data: result.products,
+      currentPage: result.currentPage,
+      hasNextPage: result.hasNextPage,
+      hasPrevPage: result.hasPrevPage,
+      res,
+    });
+    return;
+  } catch (error) {
+    handleError(error, res);
+    return;
+  }
+};
 
 // get all related products
 export const getRelatedProducts = async (req: Request, res: Response) => {
@@ -220,10 +287,7 @@ export const getRelatedProducts = async (req: Request, res: Response) => {
       });
       return;
     }
-    const cacheKey = `relatedProducts:${JSON.stringify({
-      category,
-      productName,
-    })}:${JSON.stringify(query)}`;
+    const cacheKey = cacheKeyToGetRelatedProducts({query,category:category as string,productName:productName as string})
     let result = await cacheServices.get<PaginatedResult<PopulatedProduct>>(
       cacheKey
     );
@@ -277,8 +341,7 @@ export const getRelatedProducts = async (req: Request, res: Response) => {
 
 // get recommended featured products to increase sale by category id on product page
 export const getRecommendedProducts = async (req: Request, res: Response) => {
-  try {
-    const { catId } = req.params;
+      const { catId } = req.params;
     const query = req.query;
     if (
       !catId ||
@@ -292,8 +355,8 @@ export const getRecommendedProducts = async (req: Request, res: Response) => {
       });
       return;
     }
-
-    const cacheKey = `recommendedProducts:${catId}:${JSON.stringify(query)}`;
+  try {
+    const cacheKey = cacheKeyToGetRecommendedProducts({catId:catId as string,query})
     let allProducts = await cacheServices.get<
       PaginatedResult<ProductOutgoingRequest>
     >(cacheKey);
@@ -374,9 +437,7 @@ export const getAllCategoryProduct = async (req: Request, res: Response) => {
       });
       return;
     }
-    const cacheKey = `allCategoryProducts:${isExists._id}:${JSON.stringify(
-      query
-    )}`;
+    const cacheKey = cacheKeyToGetAllCategoryProducts({catId:isExists._id,query});
     // get all products related to a category
     let result = await cacheServices.get<
       PaginatedResult<ProductOutgoingRequest>
@@ -421,3 +482,23 @@ export const getAllCategoryProduct = async (req: Request, res: Response) => {
     return;
   }
 };
+
+// get all products weight assigned into product model using mongoose prisma method distinct
+export const getDistinctweights = async(req:Request,res:Response)=>{
+  try {
+    const weights = await ServiceClass.getAllWeightsOfProducts();
+    createResponse({
+      success:true,
+      message:"Weights used for products",
+      status:200,
+      data:weights,
+      res
+    });
+    return;
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    handleError(error, res);
+    return;
+  }
+}
+

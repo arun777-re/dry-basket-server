@@ -1,13 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { InviteSchemaDTO } from "../types/invite";
 
-export interface IInviteCode extends Document {
-  code: string;
-  isUsed: boolean;
-  createdAt: Date;
-  usedAt?: Date;
-}
 
-const InviteCodeSchema: Schema = new Schema(
+
+const InviteCodeSchema: Schema = new Schema<InviteSchemaDTO>(
   {
     code: {
       type: String,

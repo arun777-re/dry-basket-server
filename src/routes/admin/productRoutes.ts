@@ -10,7 +10,7 @@ const router = express.Router();
 router.post('/create',verifyAdminToken,upload.none(),createProduct);
 router.delete('/delete/:slug',verifyAdminToken,deleteProduct);
 router.patch('/update/:slug',verifyAdminToken,upload.none(),updateProduct);
-router.get('/getall',getAllProducts);
+router.get('/getall',verifyAdminToken,getAllProducts);
 
 
 

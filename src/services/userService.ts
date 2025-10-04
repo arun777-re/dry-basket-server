@@ -2,7 +2,7 @@ import mongoose, { ClientSession } from "mongoose";
 import { PublicUserDTO } from "../dtos/user.dto";
 import { toPublicUserDTO } from "../mapper/user.mapper";
 import User from "../models/User";
-import { UserDocument, UserProps } from "../types/user";
+import { UserDocument, UserOutgoingReqDTO, UserProps } from "../types/user";
 
 
 export class UserServices {
@@ -24,7 +24,19 @@ async findUserById (
   try {
     const user = await User.findById(userId);
     if (!user) return null;
-    return user;
+    return user ;
+  } catch (error) {
+    throw error;
+  }
+};
+async findUserByIdNormal (
+  userId: string
+): Promise<UserOutgoingReqDTO | null>{
+  try {
+    const user = await User.findById(userId).select("-_id,-__v").lean();
+    console.log("user",user)
+    if (!user) return null;
+    return user as unknown as UserOutgoingReqDTO;
   } catch (error) {
     throw error;
   }

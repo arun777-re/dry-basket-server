@@ -1,5 +1,5 @@
 import express from 'express';
-import { createOrder, verifyPayment } from '../../controllers/public/paymentController';
+import { createOrder,verifyPayment } from '../../controllers/public/paymentController';
 import { withAuth } from '../../utils/heplers';
 
 
@@ -10,7 +10,7 @@ router.post('/create-order',withAuth(true),createOrder);
 
 
 // verify payment route
-router.post('/verify-payment',verifyPayment);
+router.post('/verify-payment',withAuth(true),verifyPayment);
 
 
 export default router;

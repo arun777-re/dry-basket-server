@@ -5,7 +5,7 @@ import { Offer } from "../models";
 export const getOfferByCode = async(code:string,session?:ClientSession)=>{
     try {
         const safecode = code.trim();
-        const couponInfo = await Offer.findOne({code:safecode},{session});
+        const couponInfo = await Offer.findOne({code:safecode}).session(session || null);
         return couponInfo;
     } catch (error) {
         console.error('Error during fetch offer by code',error);

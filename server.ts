@@ -7,28 +7,33 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
+import 'tslib';
 
 import { dbConnect } from './src/db';
-import {connectRedis} from './src/config/redis';
 
 // Routes
 import adminRoutes from './src/routes/admin/authRoutes';
 import adminProductRoutes from './src/routes/admin/productRoutes';
 import categoryRoutes from './src/routes/admin/categoryRoute';
+import bannerRoutes from './src/routes/admin/bannerRoute';
+import blogRoutes from './src/routes/admin/blogRoutes';
 import offerRoutes from './src/routes/admin/offerRoute';
 import paymentRoutes from './src/routes/public/paymentRoute';
 import publicProductRoutes from './src/routes/public/productRoutes';
 import publicCartRoutes from './src/routes/public/cartRoutes';
 import userAuthRoutes from './src/routes/public/authRoute';
 import reviewRoutes from './src/routes/public/reviewRoute';
+import shippingRoutes from './src/routes/public/shippingRoutes';
+import orderRoute from './src/routes/public/orderRoute';
+import bannerRoute from './src/routes/public/bannerRoutes';
+import blogRoute from './src/routes/public/blogRoutes';
+import publicCategoryRoutes from './src/routes/public/categoryRoutes';
 
 const app: Application = express();
 
 // Connect to the database
 dbConnect();
 
-// connect to redis 
-connectRedis()
 
 // Middlewares
 app.use(helmet());
@@ -55,6 +60,8 @@ app.use('/v1/admin/product', adminProductRoutes);
 app.use('/v1/admin', adminRoutes);
 app.use('/v1/admin/category', categoryRoutes);
 app.use('/v1/admin/offer', offerRoutes);
+app.use('/v1/admin/banner',bannerRoutes);
+app.use('/v1/admin/blog',blogRoutes);
 
 // --------- Public Routes (with limiter) ------------
 const publicRouter = express.Router();
@@ -62,7 +69,12 @@ publicRouter.use(publicLimiter);
 publicRouter.use('/product', publicProductRoutes);
 publicRouter.use('/cart',publicCartRoutes);
 publicRouter.use('/auth',userAuthRoutes);
-publicRouter.use('/review',reviewRoutes)
+publicRouter.use('/review',reviewRoutes);
+publicRouter.use('/shipment',shippingRoutes);
+publicRouter.use('/order',orderRoute);
+publicRouter.use('/blog',blogRoute);
+publicRouter.use('/banner',bannerRoute);
+publicRouter.use('/category',publicCategoryRoutes);
 app.use('/v1/public', publicRouter);
 
 // --------- Payment Routes (with limiter) ------------

@@ -45,18 +45,23 @@ export function createResponse({
   // assigning properties comes to a single object
   const body: Record<string, any> = { success, status, message };
   if (data !== undefined) body.data = data;
+  if(currentPage !== undefined ) body.currentPage = currentPage;
+  if(hasPrevPage !== undefined ) body.hasPrevPage = hasPrevPage;
+  if(hasNextPage !== undefined ) body.hasNextPage = hasNextPage;
   return res.status(status).json(body);
 }
 
 // function for pagination 
-export async function pagination ({query,model}:{query:any,model:Model<any>}){
+export async function pagination ({query,model,filter}:{query:any,model:Model<any>,
+    filter?: Record<string, any>;
+}){
   const page = parseInt(query.page) || 1;
   const limit = parseInt(query.limit) || 10;
 
   // use safelimit 
   const safelimit = limit > 0 ? limit : 10;
 
-  const totalDocs = await model.countDocuments();
+  const totalDocs = await model.countDocuments(filter);
   const totalPages = Math.ceil(totalDocs / safelimit);
 
   // current page
@@ -78,7 +83,7 @@ export async function pagination ({query,model}:{query:any,model:Model<any>}){
 // function to check whether category exists or is a leaf category means its has no parents
 
 export const getValidLeafCategory = async(category:string)=>{
-const categoryExist = await Category.findOne({name:category});
+const categoryExist = await Category.findOne({name:{$regex:`^${category}$`,$options:"i"}});
 if(!categoryExist){
   throw new Error('No such category exists');
 }
@@ -149,7 +154,7 @@ export const sendError = async({
   session?:ClientSession | null,
   message:string,
   status:number
-}):Promise<never>=>{
+}):Promise<void>=>{
   if(session && session.inTransaction()){
    await session.abortTransaction();
 
@@ -160,10 +165,8 @@ export const sendError = async({
     status,
     res
    });
-   throw new Error(message);
+   return;
 }
-
-
 
 // hash pass
 export const hashPass = async(password:string)=>{
@@ -182,6 +185,7 @@ export interface CategoryNode {
   _id: string;
   name: string;
   parent?: string;
+  slug:string;
 }
 
 export interface CategoryTreeNode extends CategoryNode {
@@ -199,6 +203,7 @@ export function buildTree(
       _id: cat._id,
       name: cat.name,
       parent: cat.parent,
+      slug:cat.slug,
       children: buildTree(cat._id, categories)
     }));
 }

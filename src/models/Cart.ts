@@ -61,6 +61,10 @@ const cartSchema = new mongoose.Schema<CartMongooseDocument>(
       required: true,
       default: 0,
     },
+    totalWeight:{
+      type:Number,
+      default:0
+    }
   },
   { timestamps: true, optimisticConcurrency: true, versionKey: "__v" }
 );
@@ -70,16 +74,19 @@ cartSchema.pre("save", function (next) {
   // calculate subtotal for each item
   cart.items = cart.items.map((item: any) => {
     let discountedPrice = item.variant.priceAfterDiscount ?? item.variant.price;
-
     item.subtotal = discountedPrice * item.quantity;
-
     return item;
   });
   // cart total = sum of all subtotals
-  cart.total = cart.items.reduce((acc: number, item: any) => {
+  cart.total = Array.isArray(cart.items) && cart.items.length > 0 && cart.items.reduce((acc: number, item: any) => {
     return acc + item.subtotal;
   }, 0);
 
+  // usefull for shipment
+  cart.totalWeight = Array.isArray(cart.items) && cart.items.length > 0 ? cart.items.reduce((acc:number,item:any)=>{
+    const totalWeightOfProduct = (item.variant.weight * item.quantity)
+    return acc + totalWeightOfProduct
+  },0) : 0;
   let finalTotal = cart.total;
 
   cart.finalTotal = Math.max(finalTotal, 0);

@@ -120,7 +120,6 @@ export const createOrAddItemToCart = async (
 
 // controller to get cart
 export const getCart = async (req: CustomReq, res: Response): Promise<void> => {
-  try {
     const userId = req?.user?._id;
     if (!validateId(userId as string)) {
       await sendError({
@@ -128,8 +127,9 @@ export const getCart = async (req: CustomReq, res: Response): Promise<void> => {
         message: `Provide appropriate userID:${userId}`,
         res,
       });
+      return;
     }
-
+  try {
     let cart: PopulatedCartDTO | null =
       await cacheServices.get<PopulatedCartDTO>(`cart:${userId}`);
     // getting cart using users id
@@ -142,10 +142,10 @@ export const getCart = async (req: CustomReq, res: Response): Promise<void> => {
       }
     }
 
-    if (!cart) {
+    if (!cart || cart?.items.length === 0 ) {
       createResponse({
-        success: false,
-        status: 404,
+        success:true ,
+        status:200,
         message: "No Items in the cart",
         res,
       });
@@ -161,7 +161,9 @@ export const getCart = async (req: CustomReq, res: Response): Promise<void> => {
     });
     return;
   } catch (error) {
-    handleError(error instanceof Error ? error.message : error, res);
+    if(!res.headersSent){
+    handleError(error, res);
+    }
     return;
   }
 };
@@ -259,7 +261,7 @@ export const removeItemFromCart = async (req: CustomReq, res: Response) => {
       await session.abortTransaction();
     }
     if (!res.setHeader) {
-      handleError(error instanceof Error ? error.message : error, res);
+      handleError(error, res);
     }
     return;
   } finally {
@@ -354,7 +356,7 @@ export const adjustItemQty = async (
     });
   } catch (error) {
     if (!res.headersSent) {
-      handleError(error instanceof Error ? error.message : error, res);
+      handleError(error, res);
     }
     return;
   }
@@ -364,11 +366,12 @@ export const adjustItemQty = async (
 
 // apply coupon to cart
 export const applyCouponToCart = async (req: CustomReq, res: Response) => {
-  const session: ClientSession = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const userId = req.user?.id;
+  const userId = req.user?.id;
     const { code } = req.query;
+      const session: ClientSession = await mongoose.startSession();
+  session.startTransaction(); 
+  try {
+  
     // basic validation
     if (!code || !validateId(userId)) {
       await sendError({
@@ -377,6 +380,7 @@ export const applyCouponToCart = async (req: CustomReq, res: Response) => {
         res,
         session,
       });
+      return;
     }
 
     const cart = await simplecartservice.getCartByUserId({
@@ -390,6 +394,7 @@ export const applyCouponToCart = async (req: CustomReq, res: Response) => {
         res,
         session,
       });
+      return;
     }
 
     // find that the coupon is exists or not
@@ -401,6 +406,7 @@ export const applyCouponToCart = async (req: CustomReq, res: Response) => {
         res,
         session,
       });
+      return;
     }
     // check if a single coupon is not applied again
     const alreadyApplied = cart?.coupon?.some((c: any) => c.code === code);
@@ -411,6 +417,7 @@ export const applyCouponToCart = async (req: CustomReq, res: Response) => {
         res,
         session,
       });
+      return;
     }
 
     if (typeof cart!.total !== "number") {
@@ -454,8 +461,10 @@ export const applyCouponToCart = async (req: CustomReq, res: Response) => {
         status: 409,
         res,
       });
+      return;
     }
 
+    // increase usage count of coupon after successfully applied
     await increaseUsageCountOfCoupon(isCoupon._id.toString(), session);
     await session.commitTransaction();
 
@@ -468,9 +477,12 @@ export const applyCouponToCart = async (req: CustomReq, res: Response) => {
       res,
     });
   } catch (error) {
+    if(session.inTransaction()){
     await session.abortTransaction();
-    handleError(error instanceof Error ? error.message : error, res);
-    return;
+    }
+    if(!res.setHeader || !res.headersSent){
+    handleError(error,res);
+    }
   } finally {
     session.endSession();
   }
@@ -505,13 +517,14 @@ export const clearCart = async (req:CustomReq, res: Response) => {
       status: 200,
       message: "Cart cleared successfully",
       res,
+      data:[]
     });
     return;
   } catch (error) {
-    handleError(error instanceof Error ? error.message : error, res);
+    handleError( error, res);
     return;
   }
-};
+}; 
 
 // // merge cart
 // export const mergeCart = async (req: Request, res: Response) => {
