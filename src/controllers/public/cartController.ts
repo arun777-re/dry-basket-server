@@ -37,16 +37,7 @@ export const createOrAddItemToCart = async (
   res: Response
 ): Promise<void> => {
   const userId = req?.user?._id!;
-  // userId validation coming from req
-  if (!validateId(userId as string)) {
-    createResponse({
-      success: false,
-      status: 400,
-      message: "Invalid userId",
-      res,
-    });
-    return;
-  }
+  
   // validate coming items data with yup
   const items: CartItemIncomingDTO[] =
     await simplecartservice.validateCartItems(req.body);
@@ -54,6 +45,7 @@ export const createOrAddItemToCart = async (
   // check whether coming productId exists or not
   let isProduct = await verifyProductExistsInCartController({
     items,
+  
   });
   if (!isProduct.success) {
     createResponse({

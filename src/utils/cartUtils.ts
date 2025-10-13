@@ -26,11 +26,11 @@ export const validateId = (id:string)=>{
 
 // verify product utils if exits or not
 export const verifyProductExistsInCartController = async({items}:{
-items:CartItemIncomingDTO[],
+items:CartItemIncomingDTO[]
 }):Promise<{success:boolean;message?:string}>=>{
   const isProduct = await Promise.all(
         items.map(item=>productserviceclass.getProductById({
-        productId: item.productId as string,
+        productId: item.productId as string
       })));
 
       const missingIndex = isProduct.findIndex(p=>!p);
