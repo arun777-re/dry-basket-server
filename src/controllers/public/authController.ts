@@ -16,21 +16,20 @@ import { CustomReq } from "../../types/customreq";
 import { cacheServices, checkRateLimit } from "../../services/redis/cache";
 import { cacheKeyToGetUser } from "../../utils/cacheKeyUtils";
 
-    const userService = new UserServices();
-
+const userService = new UserServices();
 
 export const signupUser = async (req: Request, res: Response) => {
-      const { firstName, lastName, email, password } = req.body;
-    // handle validation
-    validateFields(
-      {
-        firstName,
-        lastName,
-        email,
-        password,
-      },
-      res
-    );
+  const { firstName, lastName, email, password } = req.body;
+  // handle validation
+  validateFields(
+    {
+      firstName,
+      lastName,
+      email,
+      password,
+    },
+    res
+  );
   try {
     // check whether any user with email exists before
     const existingUser = await userService.findUserByEmail(email);
@@ -68,10 +67,10 @@ export const signupUser = async (req: Request, res: Response) => {
       message: `${firstName} account created successfully`,
       status: 201,
       res,
-        data:{
-        email:newUser.email,
-        firstName:newUser.firstName,
-        lastName:newUser.lastName
+      data: {
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
       },
     });
     return;
@@ -82,24 +81,24 @@ export const signupUser = async (req: Request, res: Response) => {
 };
 
 export const signin = async (req: Request, res: Response) => {
-      const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    // validate fields
-    validateFields({ email, password }, res);
+  // validate fields
+  validateFields({ email, password }, res);
 
   try {
-  // limit incoming req
-  const ip = req.ip;
-  const allowed = await checkRateLimit(ip as string,5,60*5);
-  if(!allowed){
+    // limit incoming req
+    const ip = req.ip;
+    const allowed = await checkRateLimit(ip as string, 5, 60 * 5);
+    if (!allowed) {
       createResponse({
         success: false,
         status: 429,
         message: "Too many requests.Try again later",
         res,
       });
-      return; 
-  }
+      return;
+    }
     // check user exists with the email
     const userservice = new UserServices();
     const user = await userservice.findUserByEmail(email);
@@ -139,11 +138,11 @@ export const signin = async (req: Request, res: Response) => {
       status: 200,
       message: "Login Successfull",
       res,
-      data:{
-        email:user.email,
-        firstName:user.firstName,
-        lastName:user.lastName
-      }
+      data: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
     });
     return;
   } catch (error: any) {
@@ -154,25 +153,22 @@ export const signin = async (req: Request, res: Response) => {
   }
 };
 
-export const logout = async (req:CustomReq, res: Response) => {
+export const logout = async (req: CustomReq, res: Response) => {
+  const userId = req?.user?._id;
+  const cacheKey = cacheKeyToGetUser(userId as string);
   try {
-    const userId = req?.user?._id;
-    // check whether any user exists with this id
-    const userservice = new UserServices();
-    const user = await userservice.findUserById(userId as string);
-    if (!user) {
+    const statusChange = await userService.changeActiveStatus(userId as string);
+    if (!statusChange) {
       createResponse({
         success: false,
-        message: "User does not exists",
+        message: "User does not exists / error during change user status",
         status: 404,
         res,
       });
       return;
     }
-    user.isActive = false;
-    await user.save();
     setAuthCookies(res, null, null);
-
+    await cacheServices.del(cacheKey);
     createResponse({
       message: "Log Out Successfully",
       success: true,
@@ -182,11 +178,7 @@ export const logout = async (req:CustomReq, res: Response) => {
     });
     return;
   } catch (error: any) {
-    if (error instanceof Error) {
-      handleError(error, res);
-      return;
-    }
-    handleError("Unknown error occured", res);
+    handleError(error, res);
     return;
   }
 };
@@ -366,11 +358,11 @@ export const updatePassWord = async (req: Request, res: Response) => {
       status: 200,
       message: "Password was updated",
       res,
-      data:{
-        email:user.email,
-        firstName:user.firstName,
-        lastName:user.lastName,
-      }
+      data: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
     });
     return;
   } catch (error) {
@@ -381,52 +373,60 @@ export const updatePassWord = async (req: Request, res: Response) => {
     }
     handleError("Unknown error occurred", res);
     return;
-  } finally { 
-   session.endSession();
+  } finally {
+    session.endSession();
   }
 };
 
-
-// get user profile 
-export const getUserProfile = async (req:CustomReq, res: Response) => {
+// get user profile
+export const getUserProfile = async (req: CustomReq, res: Response) => {
   const userId = req.user?._id;
   const cacheKey = cacheKeyToGetUser(userId as string);
   // check cache first
   const cached = await cacheServices.get<UserOutgoingReqDTO>(cacheKey);
-  if(cached){
+  if (cached) {
     createResponse({
-      success:true,
-      message:"User profile fetched successfully",
-      status:200,
+      success: true,
+      message: "User profile fetched successfully",
+      status: 200,
       res,
-      data:cached
+      data: cached,
     });
     return;
   }
 
   try {
     const user = await userService.findUserByIdNormal(userId as string);
-    if(!user){
-        createResponse({
-            success:false,
-            status:404,
-            message:"User not found",
-            res
-        });
-        return;
+    if (!user) {
+      createResponse({
+        success: false,
+        status: 404,
+        message: "User not found",
+        res,
+      });
+      return;
     }
-    await cacheServices.set(cacheKey,user,60*60); // cache for 1 hour
+    const payload = {
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
+
+    await cacheServices.set(cacheKey, payload, 60 * 60); // cache for 1 hour
     createResponse({
       success: true,
       status: 200,
       message: "User profile fetched successfully",
       res,
-      data: user
+      data: payload,
     });
     return;
   } catch (error) {
-    console.error("Error fetching user profile:", error instanceof Error ? error.message : error);
+    console.error(
+      "Error fetching user profile:",
+      error instanceof Error ? error.message : error
+    );
     handleError("Error fetching user profile", res);
     return;
   }
-}
+};

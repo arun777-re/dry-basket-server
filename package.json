@@ -3,16 +3,21 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --legacy-watch --exec ts-node ./server.ts",
-    "worker:order": "ts-node -r dotenv/config src/workers/orderWorker.ts",
-    "worker:order:prod": "node dist/workers/orderWorker.js",
-    "worker:order-cancel:prod": "node dist/workers/orderCancelWorker.js",
-    "worker:order-track:prod": "node dist/workers/orderTrackingWorker.js",
-    "worker:track": "ts-node -r dotenv/config src/workers/orderTrackingWorker",
-    "worker:cancel": "ts-node -r dotenv/config src/workers/orderCancelWorker"
-  },
+"scripts": {
+  "build": "tsc",
+  "start": "node dist/server.js",
+  "dev": "nodemon --legacy-watch --exec ts-node ./src/server.ts",
+  
+  "worker:order": "ts-node -r dotenv/config src/workers/orderWorker.ts",
+  "worker:order:prod": "node dist/workers/orderWorker.js",
+
+  "worker:order-cancel": "ts-node -r dotenv/config src/workers/orderCancelWorker.ts",
+  "worker:order-cancel:prod": "node dist/workers/orderCancelWorker.js",
+
+  "worker:order-track": "ts-node -r dotenv/config src/workers/orderTrackingWorker.ts",
+  "worker:order-track:prod": "node dist/workers/orderTrackingWorker.js"
+}
+,
   "keywords": [],
   "author": "Arun Jamdagni",
   "license": "ISC",

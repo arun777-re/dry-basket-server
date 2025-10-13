@@ -17,10 +17,15 @@ import {
   cacheKeyToGetFilterProducts,
 } from "../../utils/cacheKeyUtils";
 import { validateId } from "../../utils/cartUtils";
+import { CustomReq } from "../../types/customreq";
+import { InteractionService } from "../../services/interaction/action.service";
+import { PaginationQuery } from "../../types/response";
 // class call
 const ServiceClass = new SimpleProductService();
 
 const CategoryService = new SimpleCategoryServices();
+
+const interactservice = new InteractionService();
 
 // get a product
 
@@ -402,8 +407,31 @@ export const getRecommendedProducts = async (req: Request, res: Response) => {
 };
 
 // get recommended products for a user after login based on interaction
-export const getUserRecommendedProduc = async (req: Request, res: Response) => {
+export const getUserRecommendedProduc = async (req:CustomReq, res: Response) => {
+  const userId = req.user?._id;
+  const query = req.query;
   try {
+    if(userId && await interactservice.lengthOfModel(userId as string) > 0){
+        const allproducts = await ServiceClass.getRecommendedByQuery({userId:userId as string,query:query as unknown as  PaginationQuery});
+        if(!allproducts?.products?.length){
+           return getRecommendedProducts(req,res); 
+        }
+        createResponse({
+          success:false,
+          status:200,
+          message:"fetched recommended products based on interact",
+          res,
+          data:allproducts?.products,
+          hasNextPage:allproducts?.hasNextPage,
+          hasPrevPage:allproducts?.hasPrevPage,
+          currentPage:allproducts?.currentPage
+        });
+        return;
+
+    }else{
+    return getRecommendedProducts(req,res);
+    }
+
   } catch (error) {
     handleError(error, res);
     return;

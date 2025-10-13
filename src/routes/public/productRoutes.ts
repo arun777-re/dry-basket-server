@@ -4,10 +4,10 @@ import {
   getAllFeaturedProduct,
   getDistinctweights,
   getProductsNavSearch,
-  getRecommendedProducts,
   getRelatedProducts,
   getSearchProducts,
   getSingleProduct,
+  getUserRecommendedProduc,
 } from "../../controllers/public/productController";
 import { withAuth } from "../../utils/heplers";
 
@@ -18,7 +18,7 @@ router.get("/getfeatured/:catname", withAuth(false), getAllFeaturedProduct);
 router.get("/getfilter", withAuth(false), getSearchProducts);
 router.get("/getrelated", withAuth(false), getRelatedProducts);
 router.get("/getcatproduct/:catname", withAuth(false), getAllCategoryProduct);
-router.get("/getrecommended/:catId", withAuth(false), getRecommendedProducts);
+router.get("/getrecommended/:catId", withAuth(false), getUserRecommendedProduc);
 router.get("/getnavsearch",withAuth(false),getProductsNavSearch);
 router.get("/getweight",withAuth(false),getDistinctweights);
 // here one route is also created for get user recommended based on their interaction

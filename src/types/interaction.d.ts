@@ -1,9 +1,11 @@
 import { Document, Types } from "mongoose";
 
 export interface IncomingOrOutgoingInteractionDTO {
-  user: Types.ObjectId | string;
-  product: Types.ObjectId | string;
-  action: "view" | "purchase" | "addCart";
+  userId: Types.ObjectId | string;
+  productId: Types.ObjectId[] | string[];
+  action: "view" | "purchase" | "addCart" | "addToWishlist";
+  categoryId?:Types.ObjectId | string;
+  weight:number;
 }
 
 export interface InteractionDocumentDTO

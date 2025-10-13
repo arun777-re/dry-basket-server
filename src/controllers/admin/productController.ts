@@ -7,10 +7,14 @@ import {
 } from "../../utils/heplers";
 import slugify from "slugify";
 import { v4 as uuid } from "uuid";
-import { ProductService } from "../../services/productService";
+import {
+  ProductService,
+  SimpleProductService,
+} from "../../services/productService";
 import mongoose from "mongoose";
 
 const ServiceClass = new ProductService();
+const productclass = new SimpleProductService();
 
 // createProduct
 export const createProduct = async (req: Request, res: Response) => {
@@ -60,7 +64,11 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     // checking whether images atleast 2 and not large than 5
-    if (!Array.isArray(parsedImages) || parsedImages.length < 2 || parsedImages.length > 5) {
+    if (
+      !Array.isArray(parsedImages) ||
+      parsedImages.length < 2 ||
+      parsedImages.length > 5
+    ) {
       createResponse({
         success: false,
         message: "Provide atleast 2 to 5 images for the product",
@@ -81,17 +89,17 @@ export const createProduct = async (req: Request, res: Response) => {
 
     // sending data to service
     const data = {
-              productName,
-              category: catId,
-              status,
-              description,
-              tags:parsedTags,
-              variants:parsedVariants,
-              images:parsedImages,
-              isFeatured,
-              slug,
-            }
-    const product = await ServiceClass.createProductService({data:data})
+      productName,
+      category: catId,
+      status,
+      description,
+      tags: parsedTags,
+      variants: parsedVariants,
+      images: parsedImages,
+      isFeatured,
+      slug,
+    };
+    const product = await ServiceClass.createProductService({ data: data });
 
     createResponse({
       success: true,
@@ -102,57 +110,60 @@ export const createProduct = async (req: Request, res: Response) => {
     });
     return;
   } catch (error: any) {
-    handleError(error,res);
+    handleError(error, res);
     return;
   }
 };
 
 // delete product
-export const deleteProduct = async(req:Request,res:Response)=>{
+export const deleteProduct = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-      const slug = req.params.slug?.trim();
-      if(!slug){
-       await session.abortTransaction();
-         session.endSession()
-        createResponse({
-          success:false,
-          message:"Provide proper data of slug to delete",
-          status:400,
-          res
-        });
-        return;
-      }
+    const slug = req.params.slug?.trim();
+    if (!slug) {
+      await session.abortTransaction();
+      session.endSession();
+      createResponse({
+        success: false,
+        message: "Provide proper data of slug to delete",
+        status: 400,
+        res,
+      });
+      return;
+    }
 
-      const result = await ServiceClass.deleteProductService({slug,session:session});
+    const result = await ServiceClass.deleteProductService({
+      slug,
+      session: session,
+    });
 
-      if(!result){
-       await session.abortTransaction();
-        session.endSession()
-           createResponse({
-          success:false,
-          message:"Product deletion operation failed",
-          status:404,
-          res
-        });
-        return;
-      }
-     await session.commitTransaction();
-       createResponse({
-          success:true,
-          message:result.message,
-          status:200,
-          res
-        });
-        return;
+    if (!result) {
+      await session.abortTransaction();
+      session.endSession();
+      createResponse({
+        success: false,
+        message: "Product deletion operation failed",
+        status: 404,
+        res,
+      });
+      return;
+    }
+    await session.commitTransaction();
+    createResponse({
+      success: true,
+      message: result.message,
+      status: 200,
+      res,
+    });
+    return;
   } catch (error) {
     await session.abortTransaction();
-    handleError(error,res);
-  }finally{
+    handleError(error, res);
+  } finally {
     session.endSession();
   }
-}
+};
 
 //update product
 export const updateProduct = async (req: Request, res: Response) => {
@@ -160,17 +171,17 @@ export const updateProduct = async (req: Request, res: Response) => {
   session.startTransaction();
   try {
     const slug = req.params.slug.trim();
-    let { isFeatured, tags, variants} = req.body;
+    let { isFeatured, tags, variants } = req.body;
 
-    if(typeof isFeatured === 'string'){
-      isFeatured = isFeatured === 'true';
+    if (typeof isFeatured === "string") {
+      isFeatured = isFeatured === "true";
     }
     // parse the nested data coming from request
-    if(typeof tags === 'string'){
-tags = JSON.parse(tags)
+    if (typeof tags === "string") {
+      tags = JSON.parse(tags);
     }
-    if(typeof variants === 'string'){
-variants = JSON.parse(variants)
+    if (typeof variants === "string") {
+      variants = JSON.parse(variants);
     }
 
     if (isFeatured === undefined && !tags && !variants) {
@@ -184,15 +195,15 @@ variants = JSON.parse(variants)
       return;
     }
 
-   const result = await ServiceClass.updateProductService({slug,query:{isFeatured:isFeatured,
-    tags:tags,
-    variants:variants,
-    
-   },session});
+    const result = await ServiceClass.updateProductService({
+      slug,
+      query: { isFeatured: isFeatured, tags: tags, variants: variants },
+      session,
+    });
 
     if (!result) {
       await session.abortTransaction();
-      session.endSession()
+      session.endSession();
       createResponse({
         success: false,
         status: 404,
@@ -201,7 +212,7 @@ variants = JSON.parse(variants)
       });
       return;
     }
-await session.commitTransaction();
+    await session.commitTransaction();
 
     createResponse({
       success: true,
@@ -218,7 +229,7 @@ await session.commitTransaction();
     }
     handleError("Unknown error occured", res);
     return;
-  }finally{
+  } finally {
     session.endSession();
   }
 };
@@ -228,24 +239,24 @@ export const getAllProducts = async (req: Request, res: Response) => {
   try {
     const query = req.query;
 
-   if(!query){
-    createResponse({
-      success:false,
-      message:"Provide pagination details for pagination",
-      status:400,
-      res
-    });
-    return;
-   }
+    if (!query) {
+      createResponse({
+        success: false,
+        message: "Provide pagination details for pagination",
+        status: 400,
+        res,
+      });
+      return;
+    }
 
-const allProducts = await ServiceClass.getAllProducts({query:query});
+    const allProducts = await ServiceClass.getAllProducts({ query: query });
     if (allProducts?.products.length === 0) {
       createResponse({
         success: false,
         message: "No Products created yet.",
-        status:200,
+        status: 200,
         res,
-        data:[]
+        data: [],
       });
       return;
     }
@@ -254,14 +265,52 @@ const allProducts = await ServiceClass.getAllProducts({query:query});
       message: "Products fetched successfully.",
       status: 200,
       res,
-      data:allProducts.products,
-      currentPage:allProducts.currentPage,
-      hasPrevPage:allProducts.hasPrevPage,
-      hasNextPage:allProducts.hasPrevPage,
+      data: allProducts.products,
+      currentPage: allProducts.currentPage,
+      hasPrevPage: allProducts.hasPrevPage,
+      hasNextPage: allProducts.hasPrevPage,
     });
     return;
   } catch (error) {
-      handleError(error, res);
+    handleError(error, res);
+    return;
+  }
+};
+
+export const getProductByName = async (req: Request, res: Response) => {
+  const { productName } = req.query;
+  if (!productName) {
+    createResponse({
+      success: false,
+      status: 400,
+      message: "Provide Produc Name",
+      res,
+      data: [],
+    });
+    return;
+  }
+  try {
+    const getProduct = await productclass.getProductWithName(productName as string);
+    if (!getProduct) {
+      createResponse({
+        success: false,
+        status: 404,
+        message: "No product found related to your search",
+        res,
+        data: [],
+      });
       return;
+    }
+    createResponse({
+      success: true,
+      message: "Products fetched successfully.",
+      status: 200,
+      res,
+      data: getProduct,
+    });
+    return;
+  } catch (error) {
+    handleError(error, res);
+    return;
   }
 };

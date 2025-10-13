@@ -1,0 +1,51 @@
+services:
+  # 1️⃣ MAIN WEB SERVICE
+  - type: web
+    name: dry-basket-api
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Add below manually in Render dashboard (not here for safety)
+      # - key: MONGODB_URI
+      #   value: your_db_uri
+      # - key: REDIS_URL
+      #   value: your_redis_url
+
+  # 2️⃣ ORDER WORKER
+  - type: worker
+    name: dry-basket-order-worker
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run worker:order:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  # 3️⃣ CANCEL WORKER
+  - type: worker
+    name: dry-basket-cancel-worker
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run worker:order-cancel:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  # 4️⃣ TRACK WORKER
+  - type: worker
+    name: dry-basket-track-worker
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run worker:order-track:prod
+    envVars:
+      - key: NODE_ENV
+        value: production

@@ -42,7 +42,7 @@ async getCartByUserId ({userId,session}:{
   }
 };
 // check whether cart exists or not with userId and return populated cart
-async getPopulatedCartByUserId ({userId,session}:{
+async   getPopulatedCartByUserId ({userId,session}:{
   userId: string,
   session?: ClientSession,
 }

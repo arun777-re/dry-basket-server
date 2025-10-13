@@ -1,4 +1,4 @@
-import mongoose, { ClientSession } from "mongoose";
+import { ClientSession } from "mongoose";
 import { PublicUserDTO } from "../dtos/user.dto";
 import { toPublicUserDTO } from "../mapper/user.mapper";
 import User from "../models/User";
@@ -34,7 +34,6 @@ async findUserByIdNormal (
 ): Promise<UserOutgoingReqDTO | null>{
   try {
     const user = await User.findById(userId).select("-_id,-__v").lean();
-    console.log("user",user)
     if (!user) return null;
     return user as unknown as UserOutgoingReqDTO;
   } catch (error) {
@@ -75,6 +74,17 @@ async updatePassService ({userId,hashPass,session,expectedVersion}:{
     return updatePass;
   } catch (error) {
    throw error
+  }
+}
+
+async changeActiveStatus(userId:string):Promise<boolean>{
+  try {
+    const changeStatus = await User.findByIdAndUpdate(userId,{$set:{isActive:false}});
+    if(!changeStatus) return false;
+    return true;
+  } catch (error) {
+    console.error("Error during logout/change active status of user",error);
+    throw new Error("Error during logout/change active status of user");
   }
 }
 }

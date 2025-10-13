@@ -28,6 +28,9 @@ import orderRoute from './src/routes/public/orderRoute';
 import bannerRoute from './src/routes/public/bannerRoutes';
 import blogRoute from './src/routes/public/blogRoutes';
 import publicCategoryRoutes from './src/routes/public/categoryRoutes';
+import wishlistRoutes from './src/routes/public/wishlistRoutes';
+import interactionRoutes from './src/routes/public/interactionRoutes';
+import analyticalRoutes from './src/routes/admin/analyticalRoutes';
 
 const app: Application = express();
 
@@ -62,6 +65,7 @@ app.use('/v1/admin/category', categoryRoutes);
 app.use('/v1/admin/offer', offerRoutes);
 app.use('/v1/admin/banner',bannerRoutes);
 app.use('/v1/admin/blog',blogRoutes);
+app.use('/v1/admin/analytics',analyticalRoutes);
 
 // --------- Public Routes (with limiter) ------------
 const publicRouter = express.Router();
@@ -75,6 +79,8 @@ publicRouter.use('/order',orderRoute);
 publicRouter.use('/blog',blogRoute);
 publicRouter.use('/banner',bannerRoute);
 publicRouter.use('/category',publicCategoryRoutes);
+publicRouter.use('/wishlist',wishlistRoutes);
+publicRouter.use('/interaction',interactionRoutes);
 app.use('/v1/public', publicRouter);
 
 // --------- Payment Routes (with limiter) ------------

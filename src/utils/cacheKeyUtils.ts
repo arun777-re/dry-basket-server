@@ -65,8 +65,14 @@ export const cacheKeyToGetRelatedProducts=({category,productName,query}:{categor
 export const cacheKeyToGetRecommendedProducts=({catId,query}:{catId:string,query:any})=>{
     return `recommendedProducts:${catId}:${JSON.stringify(query)}`;
 }
+
 export const cacheKeyToGetAllCategoryProducts=({catId,query}:{catId:string,query:any})=>{
     return `allCategoryProducts:${catId}:${JSON.stringify(
       query
     )}`;
+}
+
+export const cacheKeyToGetAllWishList=({userId,query}:{userId:string,query?:any})=>{
+   return `wl:${userId}:p=${query.page || 1}:l=${query.limit || 10}`;
+
 }

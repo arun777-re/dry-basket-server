@@ -1,4 +1,4 @@
-import { Product, Review } from "../models";
+import { Interaction, Product, Review } from "../models";
 import mongoose, { ClientSession, Types } from "mongoose";
 import {
   PaginatedResult,
@@ -232,6 +232,50 @@ export class SimpleProductService {
       throw new Error("Error during get products using search query");
     }
   }
+  // get recommended products for user based on interactions 
+  async getRecommendedByQuery ({userId,query}:{userId:string,query:PaginationQuery}){
+    try {
+      const userProductScores = await Interaction.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      {
+    $group: {
+      _id: "$productId",
+      totalWeight: { $sum: "$weight" },
+       },
+      },
+      { $sort: { totalWeight: -1 } },
+  { $limit: 10 },
+  {
+    $lookup: {
+      from: "products",
+      localField: "_id",
+      foreignField: "_id",
+      as: "product",
+    },
+  },
+  { $unwind: "$product" },
+]);
+const categoryIds = userProductScores.map(p => p.product.categoryId);
+const filter = {categoryId:{$in:categoryIds}}
+const {hasNextPage,hasPrevPage,currentPage,skip,limit} = await pagination({query,model:Product,filter})
+
+const recommended = await Product.find({
+  categoryId: { $in: categoryIds },
+}).limit(limit).skip(skip);
+console.log("hello loda",recommended)
+return {
+  hasNextPage:hasNextPage,
+  hasPrevPage:hasPrevPage,
+  currentPage:currentPage,
+  products:recommended.map((i) => i.toJSON())
+};
+    } catch (error) {
+      console.error("Error during find recommended products",error)
+      throw new Error("Error during find recommended products")
+    }
+  }
+
+  // by mongodb prisma query
   async getAllWeightsOfProducts (){
     try {
       const weight = await Product.distinct("variants.weight");
@@ -239,6 +283,57 @@ export class SimpleProductService {
     } catch (error) {
          console.error("Error during get weights of all products", error);
       throw new Error("Error during get weights of all products");
+    }
+  }
+
+  async getProductsForLessStock({query}:{query:PaginationQuery}){
+    try {
+    const threshHold = 60;
+    const filter = {
+      "variants.stock":{$lt:Number(threshHold)}
+    }
+    const {currentPage,hasNextPage,hasPrevPage,skip,limit} = await pagination({query,model:Product,filter});
+    const lowStockProducts = await Product.aggregate([
+      {$unwind:"$variants"},
+      {$match:{"variants.stock":{$lt:threshHold}}},
+      {
+        $project:{
+          productName:1,
+          category:1,
+          featured:1,
+          tags:1,
+          createdAt:1,
+          slug:1,
+          "variants.stock":1,
+          "variants.weight":1,
+          images:1,
+        }
+      },
+      {$sort:{createdAt:-1}},
+      {$skip:skip},
+      {$limit:limit},
+    ]);
+         return {
+          hasNextPage:hasNextPage,
+          hasPrevPage:hasPrevPage,
+          currentPage:currentPage,
+          products:lowStockProducts
+         }
+    } catch (error:any) {
+      console.error("Error during get low stock products",error);
+      throw new Error(`Error during get low stock products:${error.message}`);
+    }
+  }
+
+  async getProductWithName(productName:string):Promise<ProductOutgoingRequest | null>{
+    try {
+      const safeProductName = escapeRegex(productName.trim())
+      const product = await Product.findOne({productName:{$regex:safeProductName,$options:"i"}}).populate('category');
+      if(!product) return null;
+      return product.toJSON()
+    } catch (error:any) {
+      console.error("Error during find product by name",error);
+      throw new Error(`Error during find pr  oduct by name:${error.message}`);
     }
   }
 }
