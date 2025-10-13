@@ -1,27 +1,26 @@
-{
-  "name": "dry-basket-server",
+  {
+    "name": "dry-basket-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-"scripts": {
-  "build": "tsc",
-  "start": "node dist/server.js",
-  "dev": "nodemon --legacy-watch --exec ts-node ./src/server.ts",
-  
-  "worker:order": "ts-node -r dotenv/config src/workers/orderWorker.ts",
-  "worker:order:prod": "node dist/workers/orderWorker.js",
+  "description": "Dry Basket Server",
+  "main": "dist/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon --legacy-watch --exec ts-node ./src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    
+    "worker:order:dev": "ts-node -r dotenv/config src/workers/orderWorker.ts",
+    "worker:order:prod": "node dist/workers/orderWorker.js",
 
-  "worker:order-cancel": "ts-node -r dotenv/config src/workers/orderCancelWorker.ts",
-  "worker:order-cancel:prod": "node dist/workers/orderCancelWorker.js",
+    "worker:order-cancel:dev": "ts-node -r dotenv/config src/workers/orderCancelWorker.ts",
+    "worker:order-cancel:prod": "node dist/workers/orderCancelWorker.js",
 
-  "worker:order-track": "ts-node -r dotenv/config src/workers/orderTrackingWorker.ts",
-  "worker:order-track:prod": "node dist/workers/orderTrackingWorker.js"
-}
-,
+    "worker:order-track:dev": "ts-node -r dotenv/config src/workers/orderTrackingWorker.ts",
+    "worker:order-track:prod": "node dist/workers/orderTrackingWorker.js"
+  },
   "keywords": [],
   "author": "Arun Jamdagni",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
