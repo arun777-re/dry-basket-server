@@ -9,28 +9,28 @@ import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import 'tslib';
 
-import { dbConnect } from './src/db';
+import { dbConnect } from './db';
 
 // Routes
-import adminRoutes from './src/routes/admin/authRoutes';
-import adminProductRoutes from './src/routes/admin/productRoutes';
-import categoryRoutes from './src/routes/admin/categoryRoute';
-import bannerRoutes from './src/routes/admin/bannerRoute';
-import blogRoutes from './src/routes/admin/blogRoutes';
-import offerRoutes from './src/routes/admin/offerRoute';
-import paymentRoutes from './src/routes/public/paymentRoute';
-import publicProductRoutes from './src/routes/public/productRoutes';
-import publicCartRoutes from './src/routes/public/cartRoutes';
-import userAuthRoutes from './src/routes/public/authRoute';
-import reviewRoutes from './src/routes/public/reviewRoute';
-import shippingRoutes from './src/routes/public/shippingRoutes';
-import orderRoute from './src/routes/public/orderRoute';
-import bannerRoute from './src/routes/public/bannerRoutes';
-import blogRoute from './src/routes/public/blogRoutes';
-import publicCategoryRoutes from './src/routes/public/categoryRoutes';
-import wishlistRoutes from './src/routes/public/wishlistRoutes';
-import interactionRoutes from './src/routes/public/interactionRoutes';
-import analyticalRoutes from './src/routes/admin/analyticalRoutes';
+import adminRoutes from './routes/admin/authRoutes';
+import adminProductRoutes from './routes/admin/productRoutes';
+import categoryRoutes from './routes/admin/categoryRoute';
+import bannerRoutes from './routes/admin/bannerRoute';
+import blogRoutes from './routes/admin/blogRoutes';
+import offerRoutes from './routes/admin/offerRoute';
+import paymentRoutes from './routes/public/paymentRoute';
+import publicProductRoutes from './routes/public/productRoutes';
+import publicCartRoutes from './routes/public/cartRoutes';
+import userAuthRoutes from './routes/public/authRoute';
+import reviewRoutes from './routes/public/reviewRoute';
+import shippingRoutes from './routes/public/shippingRoutes';
+import orderRoute from './routes/public/orderRoute';
+import bannerRoute from './routes/public/bannerRoutes';
+import blogRoute from './routes/public/blogRoutes';
+import publicCategoryRoutes from './routes/public/categoryRoutes';
+import wishlistRoutes from './routes/public/wishlistRoutes';
+import interactionRoutes from './routes/public/interactionRoutes';
+import analyticalRoutes from './routes/admin/analyticalRoutes';
 
 const app: Application = express();
 
