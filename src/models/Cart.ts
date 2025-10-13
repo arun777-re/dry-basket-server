@@ -94,10 +94,7 @@ cartSchema.pre("save", function (next) {
 });
 
 cartSchema.index({ userId: 1, __v: 1 }, { unique: true });
-cartSchema.index(
-  { "items.productId": 1, "items.variant.weight": 1, "items.variant.price": 1 },
-  { unique: true }
-);
+
 
 const Cart: Model<CartMongooseDocument> =
   mongoose.models.Cart ||

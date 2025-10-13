@@ -37,7 +37,7 @@ export const createOrAddItemToCart = async (
   res: Response
 ): Promise<void> => {
   const userId = req?.user?._id!;
-  
+
   // validate coming items data with yup
   const items: CartItemIncomingDTO[] =
     await simplecartservice.validateCartItems(req.body);
@@ -352,7 +352,6 @@ export const adjustItemQty = async (
     return;
   }
 
-  console.timeEnd("fetch start");
 };
 
 // apply coupon to cart
