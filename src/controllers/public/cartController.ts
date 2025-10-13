@@ -274,13 +274,12 @@ export const adjustItemQty = async (
   req: CustomReq,
   res: Response
 ): Promise<void> => {
-  console.time("fetch start");
-
   const userId = req?.user?._id;
   const { delta, productId } = req.body;
+  console.log("req,body",req.body);
 
   // Input validation
-  if (!validateId(userId as string) || !validateId(productId)) {
+  if (!validateId(productId)) {
     await sendError({
       status: 400,
       message: `Provide valid userId/productId: ${userId}/${productId}`,
