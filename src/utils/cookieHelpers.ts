@@ -5,7 +5,7 @@ export const setAuthCookies = (res: Response, access: string | null, refresh: st
 
   res.cookie("accesstoken", access, {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "none",
     secure: isProd,
     maxAge: 7 * 24 * 60 * 60 * 1000, // in ms
     path: "/",
@@ -13,7 +13,7 @@ export const setAuthCookies = (res: Response, access: string | null, refresh: st
 
   res.cookie("refreshtoken", refresh, {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "none",
     secure: isProd,
     maxAge: 30 * 24 * 60 * 60 * 1000,
     path: "/",
