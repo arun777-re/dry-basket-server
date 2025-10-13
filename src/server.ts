@@ -87,8 +87,8 @@ app.use('/v1/public/payment', publicLimiter, paymentRoutes);
 
 // Global Error Handler
 const errorHandler:ErrorRequestHandler =(err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal Server Error' });
+  console.error("error",err);
+  res.status(err.status || 500).json({success:false, message: err.message || 'Internal Server Error' });
 }
 app.use(errorHandler);
 
