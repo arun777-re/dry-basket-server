@@ -40,7 +40,7 @@ dbConnect();
 
 // Middlewares
 app.use(helmet());
-app.use(cors({ origin: [ process.env.CLIENT_URL|| "http://localhost:3000",
+app.use(cors({ origin: [ process.env.CLIENT_URL|| "https://dry-basket-ycv9.vercel.app/",
   process.env.CRM_URL || "http://localhost:3001",], credentials: true }));
 app.use(morgan('dev'));
 app.use(cookieParser());
