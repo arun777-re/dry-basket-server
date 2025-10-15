@@ -92,6 +92,7 @@ export class AnalyticClass {
             },
             {$sort:{"_id":1}}
         ]);
+        console.log("hello data comes:",data)
         return data;
     } catch (error:any) {
          console.error("Error during get total sales by month", error);
