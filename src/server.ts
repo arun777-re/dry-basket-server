@@ -40,7 +40,7 @@ dbConnect();
 
 // Middlewares
 app.use(helmet());
-app.use(cors({ origin: ['dry-basket-crm.vercel.app', 'https://dry-basket-vqat.vercel.app'], credentials: true }));
+app.use(cors({ origin: ['https://dry-basket-crm.vercel.app', 'https://dry-basket-vqat.vercel.app'], credentials: true }));
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(express.json());
