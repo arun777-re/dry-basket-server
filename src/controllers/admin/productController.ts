@@ -110,6 +110,7 @@ export const createProduct = async (req: Request, res: Response) => {
     });
     return;
   } catch (error: any) {
+    console.error("Error in createProduct controller:", error);
     handleError(error, res);
     return;
   }
