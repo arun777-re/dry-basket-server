@@ -343,6 +343,7 @@ export class ProductService {
   async createProductService({ data }: { data: ProductIncomingRequest }) {
     try {
       const newProduct = await Product.create(data);
+      console.log("New Product Created:", newProduct);
       return { message: `${newProduct.productName} created successfully` };
     } catch (error) {
       console.error("ProductService Error:", {
