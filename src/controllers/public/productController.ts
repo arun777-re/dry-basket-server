@@ -204,7 +204,7 @@ export const getSearchProducts = async (req: Request, res: Response) => {
     await cacheServices.set<PaginatedResult<ProductOutgoingRequest>>(
       cacheKey,
       result,
-      60 * 60 * 1
+      60 * 30 // cache for 30 mins
     );
     createResponse({
       success: true,
@@ -320,7 +320,7 @@ export const getRelatedProducts = async (req: Request, res: Response) => {
     await cacheServices.set<PaginatedResult<PopulatedProduct>>(
       cacheKey,
       result,
-      60 * 60 * 1
+      60 * 30 // cache for 30 mins
     );
     // send success response
     createResponse({
@@ -387,7 +387,7 @@ export const getRecommendedProducts = async (req: Request, res: Response) => {
     await cacheServices.set<PaginatedResult<ProductOutgoingRequest>>(
       cacheKey,
       allProducts,
-      60 * 60 * 1
+      60 * 30 // cache for 30 mins
     );
     createResponse({
       message: "Fetched recommended products",
@@ -491,7 +491,7 @@ export const getAllCategoryProduct = async (req: Request, res: Response) => {
     await cacheServices.set<PaginatedResult<ProductOutgoingRequest>>(
       cacheKey,
       result,
-      60 * 60 * 1
+      60 * 30 // cache for 30 mins
     );
     createResponse({
       message: `Products fetched successfully associated with category:${catname}`,
