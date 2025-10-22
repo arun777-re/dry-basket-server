@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
 
  function createTransporter() {
-    if(process.env.MAIL_PROVIDER === "gmail"){
         return nodemailer.createTransport({
             service:"gamil",
             auth:{
@@ -13,17 +12,8 @@ import nodemailer from 'nodemailer';
                 accessToken:process.env.SMTP_ACCESS_TOKEN,
             }
         })
-    }else if(process.env.MAIL_PROVIDER === "mailgun"){
-        return nodemailer.createTransport({
-            host:"smtp.mailgun.org",
-            port: Number(process.env.MAILGUN_PORT),
-            auth:{
-                user:process.env.MAILGUN_USER,
-                pass:process.env.MAILGUN_PASS,
-            }
-        })
     }
-            }
+   
 
 
             // send email for registration verification
