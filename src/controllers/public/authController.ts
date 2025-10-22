@@ -4,7 +4,7 @@ import {
   validateFields,
 } from "../../utils/heplers";
 import { Request, Response } from "express";
-import { UserServices } from "../../services/userService";
+import { UserServices } from "../../services/user/userService";
 
 import { setAuthCookies } from "../../utils/cookieHelpers";
 import { TokenService } from "../../utils/tokenService";
@@ -15,6 +15,8 @@ import mongoose from "mongoose";
 import { CustomReq } from "../../types/customreq";
 import { cacheServices, checkRateLimit } from "../../services/redis/cache";
 import { cacheKeyToGetUser } from "../../utils/cacheKeyUtils";
+import { hashPassAndGenerateToken } from "../../utils/cryptoUtils";
+import { sendEmailWithNodemailer } from "../../utils/email";
 
 const userService = new UserServices();
 
@@ -43,8 +45,64 @@ export const signupUser = async (req: Request, res: Response) => {
       return;
     }
 
-    //   create user
-    const newUser = await userService.createUserService(req.body);
+    // generate hashed password and crypto token
+    const cryptoAndHashed = await hashPassAndGenerateToken({password});
+
+    // store verification token and its expiry in redis
+    await cacheServices.set(
+      `emailVerificationToken:${cryptoAndHashed.cryptoToken}`,
+      {firstName,lastName,email,hashedPass:cryptoAndHashed.hashedToken},
+      60 * 60
+    );
+
+    const sendVerificationLink = `${process.env.CLIENT_URL}/verify-email?token=${cryptoAndHashed.cryptoToken}`;
+    await sendEmailWithNodemailer({
+      to: email,
+      subject: "Verify your email for Dry Basket",
+      email: `<p>Click the link to verify your email: <a href="${sendVerificationLink}">Verify Email</a></p>`,
+    })
+      createResponse({
+        success:true,
+        status: 200,
+        message: "Verification email sent. Please check your inbox.",
+        res,
+      });
+    return;
+  } catch (error: any) {
+    console.error("Validation error during save", error.message);
+    handleError(error, res);
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.query as { token?: string };
+    // basic validation
+    validateFields({token, res}, res);
+    // check token in redis
+    const userData = await cacheServices.getAndDel<{
+      firstName: string;
+      lastName: string;
+      email: string;
+      hashedPass: string;
+    }>(`emailVerificationToken:${token as string}`);
+
+    if (!userData) {
+      createResponse({
+        success: false,
+        status: 400,
+        message: "Invalid or expired token",
+        res,
+      });
+      return;
+    }
+    // create user in db
+    const newUser = await userService.createUserService({
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      password: userData.hashedPass,
+    });
     if (!newUser) {
       createResponse({
         success: false,
@@ -62,9 +120,9 @@ export const signupUser = async (req: Request, res: Response) => {
     const refreshtoken = TokenService.generateRefreshToken(newUser._id);
     setAuthCookies(res, accesstoken, refreshtoken);
 
-    createResponse({
+      createResponse({
       success: true,
-      message: `${firstName} account created successfully`,
+      message: `${userData.firstName} account created successfully`,
       status: 201,
       res,
       data: {
@@ -74,9 +132,9 @@ export const signupUser = async (req: Request, res: Response) => {
       },
     });
     return;
-  } catch (error: any) {
-    console.error("Validation error during save", error.message);
+  } catch (error) {
     handleError(error, res);
+    return;
   }
 };
 

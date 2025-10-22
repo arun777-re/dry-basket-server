@@ -1,12 +1,10 @@
 import Category from "../models/Category";
 import mongoose, { ClientSession, Model } from "mongoose";
 import { verifyToken, verifyUserToken } from "../middleware/verifyToken";
-import { Request,Response,NextFunction } from "express";
+import { Response,NextFunction } from "express";
 import User from "../models/User";
 import bcrypt from 'bcryptjs';
 import { CustomReq } from "../types/customreq";
-import { CartItemOutgoingDTO, CartMongooseDocument } from "../types/cart";
-import items from "razorpay/dist/types/items";
 
 export function validateFields(fields: Record<string, any>,res:Response) {
   // create an array from object recieved using entries method and then filter to check whether fields are provide or not

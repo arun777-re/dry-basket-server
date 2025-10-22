@@ -8,7 +8,7 @@ export interface UserProps{
   email: string;
   password: string;
   isActive?: boolean;
-  phone: number;
+  phone?: number;
   comparePassword?(candidatePassword: string): Promise<boolean>;
   __v?:number;
 }

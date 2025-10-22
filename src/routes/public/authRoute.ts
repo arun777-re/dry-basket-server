@@ -1,11 +1,12 @@
 import express from 'express';
 import { withAuth } from '../../utils/heplers';
-import { getUserProfile, logout, resetPassRequest, resetPassWord, signin, signupUser, updatePassWord } from '../../controllers/public/authController';
+import { getUserProfile, logout, resetPassRequest, resetPassWord, signin, signupUser, updatePassWord, verifyEmail } from '../../controllers/public/authController';
 
 
 const router = express.Router();
 
 router.post('/signup',withAuth(false),signupUser);
+router.get('/verify-email',withAuth(false),verifyEmail);
 router.post('/signin',withAuth(false),signin);
 router.post('/logout',withAuth(true),logout);
 router.post('/reset-request',withAuth(false),resetPassRequest);

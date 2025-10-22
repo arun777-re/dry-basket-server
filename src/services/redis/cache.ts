@@ -23,7 +23,47 @@ export const cacheServices:RedisCacheDTO = {
   async exists(key){
     return (await redisClient.exists(key)) > 0;
   },
+// get and delete immediately with OCC safety
+async getAndDel<T>(key: string, maxRetry = 5, retryDelay = 50): Promise<T | null> {
+  let attempts = 0;
 
+  while (attempts < maxRetry) {
+    attempts++;
+
+    try {
+      await redisClient.watch(key); // watch key for changes
+      const data = await redisClient.get(key);
+
+      if (!data) {
+        await redisClient.unwatch();
+        return null; // key missing
+      }
+
+      const parsedData = JSON.parse(data) as T;
+
+      const multi = redisClient.multi();
+      multi.del(key);
+      const execResult = await multi.exec();
+
+      if (execResult === null) {
+        // some other client modified the key, retry
+        await new Promise(res => setTimeout(res, retryDelay));
+        continue;
+      }
+
+      // success, return parsed value
+      return parsedData;
+
+    } catch (err) {
+      await redisClient.unwatch();
+      if (attempts >= maxRetry) throw err;
+      await new Promise(res => setTimeout(res, retryDelay));
+    }
+  }
+
+  return null;
+}
+,
 //   OCC safe insert (only if key does not exists)
 async setIfNotExists<T>(key:string,value:T,ttlSeconds?:number){
     const serialized = JSON.stringify(value);

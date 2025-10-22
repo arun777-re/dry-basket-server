@@ -1,8 +1,8 @@
 import { ClientSession } from "mongoose";
-import { PublicUserDTO } from "../dtos/user.dto";
-import { toPublicUserDTO } from "../mapper/user.mapper";
-import User from "../models/User";
-import { UserDocument, UserOutgoingReqDTO, UserProps } from "../types/user";
+import { PublicUserDTO } from "../../dtos/user.dto";
+import { toPublicUserDTO } from "../../mapper/user.mapper";
+import User from "../../models/User";
+import { UserDocument, UserOutgoingReqDTO, UserProps } from "../../types/user";
 
 
 export class UserServices {
@@ -87,5 +87,7 @@ async changeActiveStatus(userId:string):Promise<boolean>{
     throw new Error("Error during logout/change active status of user");
   }
 }
+
+
 }
 
