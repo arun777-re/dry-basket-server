@@ -5,8 +5,8 @@ function createTransporter() {
    host: "smtp.mailgun.org",
   port: 587,
   auth: {
-    user: "postmaster@sandbox1234567890.mailgun.org", // apna sandbox username
-    pass: "yourpasswordhere", // apna password
+    user: process.env.SMTP_MAILGUN_ID, 
+    pass: process.env.SMTP_MAILGUN_SECRET, 
   },
   });
 }
