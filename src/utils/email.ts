@@ -1,17 +1,13 @@
-import nodemailer from "nodemailer";
+import formData from "form-data";
+import Mailgun from "mailgun.js";
 
-function createTransporter() {
-  return nodemailer.createTransport({
-   host: "smtp.mailgun.org",
-  port: 587,
-  auth: {
-    user: process.env.SMTP_MAILGUN_ID, 
-    pass: process.env.SMTP_MAILGUN_SECRET, 
-  },
-  });
-}
+const mailgun = new Mailgun(formData);
 
-// send email for registration verification
+const mg = mailgun.client({
+  username: process.env.SMTP_MAILGUN_ID!,
+  key: process.env.SMTP_MAILGUN_SECRET!,
+});
+
 export async function sendEmailWithNodemailer({
   to,
   subject,
@@ -22,20 +18,17 @@ export async function sendEmailWithNodemailer({
   email: string;
 }) {
   try {
-    const transporter = createTransporter();
-    if (!transporter) {
-      throw new Error("No transporter available");
-    }
-    const result = await transporter.sendMail({
-      from: `From Dry Basket <${process.env.SMTP_GMAIL_USER}>`,
+    const result = await mg.messages.create(process.env.MAILGUN_DOMAIN!, {
+      from: process.env.MAIL_FROM!,
       to,
       subject,
       html: email,
     });
-    console.log("Email sent successfully:", result.messageId);
+
+    console.log("✅ Email sent successfully:", result.id);
     return result;
-  } catch (error) {
-    console.log("Error sending email:", error);
+  } catch (error: any) {
+    console.error("❌ Error sending email:", error.message || error);
     throw new Error("Error sending email");
   }
 }
