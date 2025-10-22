@@ -4,8 +4,8 @@ import Mailgun from "mailgun.js";
 const mailgun = new Mailgun(formData);
 
 const mg = mailgun.client({
-  username: process.env.SMTP_MAILGUN_ID!,
-  key: process.env.SMTP_MAILGUN_SECRET!,
+  username:"api",
+  key: process.env.MAILGUN_API_KEY!,
 });
 
 export async function sendEmailWithNodemailer({
