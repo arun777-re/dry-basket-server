@@ -2,15 +2,12 @@ import nodemailer from "nodemailer";
 
 function createTransporter() {
   return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: process.env.SMTP_GMAIL_USER,
-      clientId: process.env.SMTP_CLIENT_ID,
-      clientSecret: process.env.SMTP_CLIENT_SECRET,
-      refreshToken: process.env.SMTP_REFRESH_TOKEN,
-      accessToken: process.env.SMTP_ACCESS_TOKEN,
-    },
+   host: "smtp.mailgun.org",
+  port: 587,
+  auth: {
+    user: "postmaster@sandbox1234567890.mailgun.org", // apna sandbox username
+    pass: "yourpasswordhere", // apna password
+  },
   });
 }
 
