@@ -8,7 +8,6 @@ import { UserServices } from "../../services/user/userService";
 
 import { setAuthCookies } from "../../utils/cookieHelpers";
 import { TokenService } from "../../utils/tokenService";
-import { sendEmail } from "../../utils/sendEmail";
 import { hashPassWord } from "../../utils/bcryptHelpers";
 import { UserDocument, UserOutgoingReqDTO } from "../../types/user";
 import mongoose from "mongoose";
@@ -264,10 +263,12 @@ export const resetPassRequest = async (req: Request, res: Response) => {
     const resetToken = TokenService.generateRestToken(email);
     const resetLink = `${process.env.SERVER_URL}/reset-password?token=${resetToken}`;
 
-    await sendEmail(
-      email,
-      "Reset Your Password",
-      `Click the link to reset your password: ${resetLink}`
+    await sendEmailWithNodemailer({
+      to:email,
+      subject:"Reset Your Password",
+      email:`Click the link to reset your password: ${resetLink}`
+    }
+
     );
 
     console.log("Email sent");
