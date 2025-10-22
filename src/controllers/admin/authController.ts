@@ -6,7 +6,6 @@ import {
 } from "../../utils/heplers";
 import jwt from "jsonwebtoken";
 import { Request, RequestHandler, Response } from "express";
-import { sendEmail } from "../../utils/sendEmail";
 import { verifyToken } from "../../middleware/verifyToken";
 import { AdminAuthClaa } from "../../services/admin/authServices";
 import { setAdminAuthCookie } from "../../utils/cookieHelpers";
@@ -15,6 +14,7 @@ import mongoose, { Types } from "mongoose";
 import { AdminProps } from "../../types/admin";
 import { cacheServices, checkRateLimit } from "../../services/redis/cache";
 import { cacheKeyToGetAdmin } from "../../utils/cacheKeyUtils";
+import { sendEmailWithNodemailer } from "../../utils/email";
 
 const secret = process.env.JWT_SECRET || "";
 const adminservices = new AdminAuthClaa();
@@ -272,10 +272,12 @@ export const forgotPass = async (req: Request, res: Response) => {
     const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     // send email
-    await sendEmail(
-      email,
-      "Password Reset Request",
-      `You requested a password reset. Click this link to reset:${resetURL}`
+    await sendEmailWithNodemailer({
+    to:email,
+     subject: "Password Reset Request",
+      email:`You requested a password reset. Click this link to reset:${resetURL}`
+    }
+  
     );
     createResponse({
       res,
