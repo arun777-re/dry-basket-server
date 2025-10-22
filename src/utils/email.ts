@@ -19,7 +19,7 @@ export async function sendEmailWithNodemailer({
 }) {
   try {
     const result = await mg.messages.create(process.env.MAILGUN_DOMAIN!, {
-      from: process.env.MAIL_FROM!,
+      from: process.env.SMTP_GMAIL_USER!,
       to,
       subject,
       html: email,
