@@ -96,7 +96,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       });
       return;
     }
-       console.log("server reaches to 2:", token)
+       console.log("server reaches to 2:", userData)
     // create user in db
     const newUser = await userService.createUserService({
       firstName: userData.firstName,
