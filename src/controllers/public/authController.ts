@@ -79,13 +79,14 @@ export const verifyEmail = async (req: Request, res: Response) => {
     // basic validation
     validateFields({token, res}, res);
     // check token in redis
+    console.log("Verifying token:", token);
     const userData = await cacheServices.getAndDel<{
       firstName: string;
       lastName: string;
       email: string;
       hashedPass: string;
     }>(`emailVerificationToken:${token as string}`);
-
+    console.log("server reaches to 1:", token);
     if (!userData) {
       createResponse({
         success: false,
@@ -95,6 +96,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       });
       return;
     }
+       console.log("server reaches to 2:", token)
     // create user in db
     const newUser = await userService.createUserService({
       firstName: userData.firstName,
@@ -102,6 +104,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       email: userData.email,
       password: userData.hashedPass,
     });
+       console.log("server reaches to 3:", token);
     if (!newUser) {
       createResponse({
         success: false,
@@ -111,14 +114,14 @@ export const verifyEmail = async (req: Request, res: Response) => {
       });
       return;
     }
-
+   console.log("server reaches to 4:", token);
     if (!newUser._id) {
       throw new Error("Id is required");
     }
     const accesstoken = TokenService.generateAccessToken(newUser._id);
     const refreshtoken = TokenService.generateRefreshToken(newUser._id);
     setAuthCookies(res, accesstoken, refreshtoken);
-
+   console.log("server reaches to 5:", token);
       createResponse({
       success: true,
       message: `${userData.firstName} account created successfully`,
