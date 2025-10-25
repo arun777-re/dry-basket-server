@@ -45,12 +45,12 @@ export const signupUser = async (req: Request, res: Response) => {
     }
 
     // generate hashed password and crypto token
-    const cryptoAndHashed = await hashPassAndGenerateToken({password});
+    const cryptoAndHashed = await hashPassAndGenerateToken();
 
     // store verification token and its expiry in redis
     await cacheServices.set(
       `emailVerificationToken:${cryptoAndHashed.cryptoToken}`,
-      {firstName,lastName,email,hashedPass:cryptoAndHashed.hashedToken},
+      {firstName,lastName,email,password},
       60 * 60
     );
 
@@ -84,7 +84,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       firstName: string;
       lastName: string;
       email: string;
-      hashedPass: string;
+      password: string;
     }>(`emailVerificationToken:${token as string}`);
     console.log("server reaches to 1:", token);
     if (!userData) {
@@ -102,7 +102,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       firstName: userData.firstName,
       lastName: userData.lastName,
       email: userData.email,
-      password: userData.hashedPass,
+      password: userData.password,
     });
        console.log("server reaches to 3:", token);
     if (!newUser) {
