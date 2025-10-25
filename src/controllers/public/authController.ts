@@ -54,7 +54,7 @@ export const signupUser = async (req: Request, res: Response) => {
       60 * 60
     );
 
-    const sendVerificationLink = `${process.env.CLIENT_URL}/verify-email?token=${cryptoAndHashed.cryptoToken}`;
+    const sendVerificationLink = `${process.env.CLIENT_URL}/user/verify-email?token=${cryptoAndHashed.cryptoToken}`;
     await sendEmailWithNodemailer({
       to: email,
       subject: "Verify your email for Dry Basket",
