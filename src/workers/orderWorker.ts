@@ -33,7 +33,9 @@ export const orderWorker = new Worker(
     const {
       safeOrderId,
       courierId,
-    }: { safeOrderId: string; courierId: string } = job.data;
+      userEmail,
+      userName,
+    }: { safeOrderId: string; courierId: string,userName:string,userEmail:string } = job.data;
 
     if (safeOrderId == null || safeOrderId === undefined || courierId == null) {
       await job.log("missing courier/order ID");
@@ -127,6 +129,8 @@ export const orderWorker = new Worker(
             orderId: safeOrderId,
             awbno: res.data.awb_number,
             expectedVersion: order.__v ?? 0,
+            userEmail:userEmail,
+            userName:userName,
           };
           // schedule tracking job if awbno exists
           if (payloadForTracking.awbno) {

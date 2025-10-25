@@ -13,21 +13,13 @@ import {
 import { RAZORPAY_SERVICES } from "../../services/order/razorpay.services";
 import { cacheServices } from "../../services/redis/cache";
 import { ShippingRateResponseDTO } from "../../types/shipping";
-import {
-  ORDERAPICACHERESDTO,
-  OrderIncomingReqDTO,
-  PopulatedOrderWithCartDTO,
-} from "../../types/order";
+
 import {
   cacheKeyToGetCourierId,
   checkPincodeForShippingCacheKey,
-  getAllOrdersCacheKey,
   getShippingRateCacheKey,
 } from "../../utils/cacheKeyUtils";
-import { trackOrderFromShipping } from "../../utils/shipmozoClient";
 import { BUSINESS_ORDER_SERVICE } from "../../services/order/order.business";
-import { PaginatedResult } from "../../types/product";
-import { UniformResponseFormat } from "../../types/response";
 import { orderTrackingQueue } from "../../queues/orderTrackingQueue";
 import { orderCancelQueue } from "../../queues/cancelOrderQueue";
 
@@ -233,7 +225,6 @@ export const getLatestOrder = async (req: CustomReq, res: Response) => {
       });
       return;
     }
-console.log("latest order...",latestOrder)
     createResponse({
       res,
       message: "Latest Order placed by user",

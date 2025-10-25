@@ -9,18 +9,21 @@ import { Worker } from "bullmq";
 import { trackOrderFromShipping } from "../utils/shipmozoClient";
 import { BUSINESS_ORDER_SERVICE } from "../services/order/order.business";
 import { bullWorkerConnection } from "../config/redis";
+import { sendEmailWithNodemailer } from "../utils/email";
 
 const orderbusinessclass = new BUSINESS_ORDER_SERVICE();
 
 export const orderTrackWorker = new Worker(
   "orderTrackingQueue",
   async (job) => {
-    console.log("Worker picked job:", job.id, job.data);
+    console.log("Worker picked job:", job.id, job.data); 
     const {
       orderId,
       awbno,
       expectedVersion,
-    }: { orderId: string; awbno: string; expectedVersion: number } = job.data;
+      userEmail,
+      userName,
+    }: { orderId: string; awbno: string; expectedVersion: number,userEmail?:string,userName?:string } = job.data;
     console.log("hello lode data", job.data);
     //   call tracking api here
     const trackingData = await trackOrderFromShipping(awbno);
@@ -28,7 +31,6 @@ export const orderTrackWorker = new Worker(
     if (trackingData.result !== "1") {
       throw new Error("Error during tracking status from api");
     }
-    console.log("tracking data lode", trackingData);
     // tracking history update only if current status is not equal to previous stored in db
     const isValidToUpdate =
       await orderbusinessclass.getLastTrackingStatusOfOrder({
@@ -41,6 +43,23 @@ export const orderTrackWorker = new Worker(
         trackingData,
         expectedVersion,
       });
+
+      // send email to customer about status update
+   await sendEmailWithNodemailer({
+  to: userEmail ?? "", // recipient
+  subject: `Order Update: Your AWB ${awbno} is now ${trackingData.data.current_status}`,
+  email: `
+    <p>Hi ${userName},</p>
+    <p>Your order with <strong>AWB #${awbno}</strong> is now <strong>${trackingData.data.current_status}</strong>.</p>
+    <p>You can track your order for more details here:</p>
+    <a href="https://yourstore.com/track/${awbno}" target="_blank">Track Order</a>
+    <br/><br/>
+    <p>Thank you for shopping with us!</p>
+  `,
+});
+
+// also here notification functionallity comes for whatsapp
+
     }
 
     // yahan parr condition based notification send karenge

@@ -157,7 +157,7 @@ export class BUSINESS_ORDER_SERVICE {
     }
   }
   // to get latest order tracking status
-  async getLastTrackingStatusOfOrder({orderId,newStatus}:{orderId:string,newStatus:string}):Promise<boolean>{
+  async  getLastTrackingStatusOfOrder({orderId,newStatus}:{orderId:string,newStatus:string}):Promise<boolean>{
 try {
   const order = await Order.findOne({_id:orderId}).lean() as OrderIncomingReqDTO;
    if (!order) {

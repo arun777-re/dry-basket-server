@@ -10,7 +10,6 @@ import {
 } from "../../utils/shipmozoClient";
 import { cacheServices } from "../../services/redis/cache";
 import { ShippingRateResponseDTO } from "../../types/shipping";
-import { SIMPLE_ORDER_SERVICES } from "../../services/order/order.services";
 import { bestRateCalculator } from "../../utils/shippingUtils";
 import { validateId } from "../../utils/cartUtils";
 import { orderQueue } from "../../queues/orderQueqe";
@@ -19,6 +18,7 @@ import {
   checkPincodeForShippingCacheKey,
   getShippingRateCacheKey,
 } from "../../utils/cacheKeyUtils";
+import { CustomReq } from "../../types/customreq";
 
 export const getShippingRate = async (
   req: Request,
@@ -167,10 +167,12 @@ export const getShippingRate = async (
 };
 
 export const placeOrderAndAssignCourierForShipping = async (
-  req: Request,
+  req:CustomReq,
   res: Response
 ) => {
   try {
+    const firstName = req.user?.firstName;
+    const email = req.user?.email;
     const { orderId } = req.query;
     const safeOrderId = (orderId as string).trim();
     const cacheKey = cacheKeyToGetCourierId(safeOrderId);
@@ -194,11 +196,11 @@ export const placeOrderAndAssignCourierForShipping = async (
       return;
     }
 
-    // setup bullmq queue for place , assign order to shipping compony and change status
+    // setup bullmq queue for place , assign order to shipping company and change status and also send notification
     try {
       await orderQueue.add(
         "processOrder",
-        { safeOrderId, courierId },
+        { safeOrderId, courierId ,userName:firstName,userEmail:email},
         {
           jobId: `order:${safeOrderId}`,
           attempts: 5,
