@@ -11,6 +11,7 @@ import { TRACKORDERSHIPPINGRESDTO } from "../../types/shipping";
 import { pagination } from "../../utils/heplers";
 import { PaginatedResult } from "../../types/product";
 import { orderTrackingQueue } from "../../queues/orderTrackingQueue";
+import User from "../../models/User";
 
 export class ORDERCRUDSERVICES {
   async createOrderService({
@@ -195,5 +196,17 @@ export class SIMPLE_ORDER_SERVICES {
               attempts: 5,
               backoff: { type: "exponential", delay: 10000 },
      })
+  }
+
+  async findAllUsersWhoClickedBlogsAgree(): Promise<string[]> {
+    try {
+      const users = await Order.find({ blogsAgree: true }).distinct("userId");
+      const allUsersEmail = await User.find({ _id: { $in: users } }).select("email");
+      const emails = allUsersEmail.map((user) => user.email);
+      return emails;
+    } catch (error) {
+      console.error("Error during fetching users who agreed to blogs");
+      throw new Error("Error during fetching users who agreed to blogs");
+    }
   }
 }

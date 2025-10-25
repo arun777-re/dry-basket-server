@@ -8,8 +8,11 @@ import {
 } from "../../utils/heplers";
 import { BlogIncomingReqDTO } from "../../types/blog";
 import { BlogServiceClass } from "../../services/blog/blog.services";
+import { SIMPLE_ORDER_SERVICES } from "../../services/order/order.services";
+import { sendEmailWithNodemailer } from "../../utils/email";
 
 const blogclass = new BlogServiceClass();
+const orderClass = new SIMPLE_ORDER_SERVICES();
 
 export const createBlog = async (req: Request, res: Response) => {
     const { authorName, heading, description, blogImage, tags,title } =
@@ -34,6 +37,24 @@ export const createBlog = async (req: Request, res: Response) => {
       });
       return;
     }
+// sending email to all users who agreed for blog updates
+    const allvalidUsersEmails = await orderClass.findAllUsersWhoClickedBlogsAgree();
+    for(const email of allvalidUsersEmails){
+      // send email to customer about status update
+   await sendEmailWithNodemailer({
+  to: email, // recipient
+  subject: `New Blog Post: ${heading}`,
+  email: `
+    <p>Hi there,</p>
+    <p>We have just published a new blog post titled "<strong>${heading}</strong>".</p>
+    <p>Click the link below to read the full article:</p>
+    <a href=${process.env.CLIENT_URL}/blog/${slug} target="_blank">Read Blog</a>
+    <br/><br/>
+    <p>Happy reading!</p>
+  `,
+});
+    }
+
     createResponse({
       success: true,
       message: "Operation successfull create Blog",
