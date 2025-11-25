@@ -132,7 +132,34 @@ export const cancelOrder = async ({
   return deleteOrder.data;
 };
 
-// check pincode serviceability
+// check pincode serviceability for realtime shipping
+// export const checkPincodeForShipping = async ({
+//   pickup_pincode,
+//   delivery_pincode,
+// }: {
+//   pickup_pincode: number;
+//   delivery_pincode: number;
+// }): Promise<boolean> => {
+//   const check = await axios.post(
+//     "https://shipping-api.com/app/api/v1/pincode-serviceability",
+//     {
+//       pickup_pincode,
+//       delivery_pincode,
+//     },
+//     {
+//       headers: {
+//         "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
+//         "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
+//         "Content-Type": "application/json",
+//       },
+//     }
+//   );
+
+//   console.log("Pincode serviceability response:", check.data);
+//   return check.data.data.serviceable;
+// };
+
+// dummy pickup pincode added
 export const checkPincodeForShipping = async ({
   pickup_pincode,
   delivery_pincode,
@@ -140,21 +167,11 @@ export const checkPincodeForShipping = async ({
   pickup_pincode: number;
   delivery_pincode: number;
 }): Promise<boolean> => {
-  const check = await axios.post(
-    "https://shipping-api.com/app/api/v1/pincode-serviceability",
-    {
-      pickup_pincode,
-      delivery_pincode,
-    },
-    {
-      headers: {
-        "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
-        "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+ const validPrefixes = ["11", "40", "56", "60", "70", "12", "20", "30", "38"];
 
-  console.log("Pincode serviceability response:", check.data);
-  return check.data.data.serviceable;
+  const isValid =
+    String(delivery_pincode).length === 6 &&
+    validPrefixes.some(prefix => String(delivery_pincode).startsWith(prefix));
+
+  return isValid;
 };
