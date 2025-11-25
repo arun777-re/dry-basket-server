@@ -22,7 +22,7 @@ export const shippingRateService = async ({
  const result = await axios.post(
   "https://shipping-api.com/app/api/v1/rate-calculator",
   {
-    pickup_pincode: process.env.PICKUP_PINCODE,
+    pickup_pincode: 131001,
     delivery_pincode: pincode,
     weight,
     payment_mode: "prepaid",
