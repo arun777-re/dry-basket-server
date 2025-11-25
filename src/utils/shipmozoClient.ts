@@ -17,10 +17,12 @@ export const shippingRateService = async ({
   pincode: number;
   weight: number;
 }): Promise<ShippingRateServiceParams> => {
+  console.log("shipozoz key:", process.env.SHIPMOZO_PUBLIC_KEY);
+  console.log("pickup pincode:", process.env.PIKUP_PINCODE);
   const result = await axios.post(
     "https://shipping-api.com/app/api/v1/rate-calculator",
     {
-      pickup_pincode: "131001", // Example pickup pincode
+      pickup_pincode:process.env.PICKUP_PINCODE,
       delivery_pincode: pincode,
       weight,
       payment_type: "PREPAID",
