@@ -152,5 +152,6 @@ export const checkPincodeForShipping = async ({
     }
   );
 
+  console.log("Pincode serviceability response:", check.data);
   return check.data.data.serviceable;
 };
