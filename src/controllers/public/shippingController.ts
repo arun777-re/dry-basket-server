@@ -25,6 +25,7 @@ export const getShippingRate = async (
   res: Response
 ): Promise<void> => {
   try {
+    console.log("Received shipping rate request",req.body);
     const { weight, pincode, amount } = req.body;
     console.log("Requested shipping details:", { weight, pincode, amount });
     validateFields({ weight, pincode, amount }, res);
@@ -69,7 +70,7 @@ export const getShippingRate = async (
 
     if (isShippingAvailable === null) {
       isShippingAvailable = await checkPincodeForShipping({
-        pickup_pincode: 131001,
+        pickup_pincode:Number(process.env.PICKUP_PINCODE) ?? 131001,
         delivery_pincode: pincode,
       });
       console.log("hello lode", isShippingAvailable);
