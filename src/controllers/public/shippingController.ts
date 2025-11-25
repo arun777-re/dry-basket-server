@@ -42,6 +42,7 @@ export const getShippingRate = async (
       cacheKey
     );
     if (shippingRates ) {
+      // check for free shipping condition
       if (amountInPaisa > 400000) {
         createResponse({
           success: true,
@@ -70,6 +71,7 @@ export const getShippingRate = async (
         pickup_pincode: 131001,
         delivery_pincode: pincode,
       });
+      console.log("hello lode", isShippingAvailable);
       if (!isShippingAvailable) {
         createResponse({
           success: false,

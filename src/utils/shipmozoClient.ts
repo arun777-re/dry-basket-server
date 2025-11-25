@@ -45,7 +45,7 @@ export const shippingRateService = async ({
       },
     }
   );
-
+console.log("shipping rate service response:", result.data);
   return result.data as unknown as ShippingRateServiceParams;
 };
 
