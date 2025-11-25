@@ -26,6 +26,7 @@ export const getShippingRate = async (
 ): Promise<void> => {
   try {
     const { weight, pincode, amount } = req.body;
+    console.log("Requested shipping details:", { weight, pincode, amount });
     validateFields({ weight, pincode, amount }, res);
 
     // cache keys
