@@ -19,34 +19,35 @@ export const shippingRateService = async ({
 }): Promise<ShippingRateServiceParams> => {
   console.log("shipozoz key:", process.env.SHIPMOZO_PUBLIC_KEY);
   console.log("pickup pincode:", process.env.PIKUP_PINCODE);
-  const result = await axios.post(
-    "https://shipping-api.com/app/api/v1/rate-calculator",
-    {
-      pickup_pincode:process.env.PICKUP_PINCODE,
-      delivery_pincode: pincode,
-      weight,
-      payment_type: "PREPAID",
-      shipment_type: "FORWARD",
-      order_amount: 1000,
-      type_of_package: "SPS",
-      cod_amount: 0,
-      dimensions: [
-        {
-          no_of_box: "1",
-          length: "22",
-          width: "10",
-          height: "10",
-        },
-      ],
-    },
-    {
-      headers: {
-        "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
-        "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
-        "Content-Type": "application/json",
+ const result = await axios.post(
+  "https://shipping-api.com/app/api/v1/rate-calculator",
+  {
+    pickup_pincode: process.env.PICKUP_PINCODE,
+    delivery_pincode: pincode,
+    weight,
+    payment_mode: "prepaid",
+    shipment_type: "forward",
+    order_amount: 1000,
+    type_of_package: "SPS",
+    cod_amount: 0,
+    dimensions: [
+      {
+        no_of_box: "1",
+        length: "22",
+        width: "10",
+        height: "10",
       },
-    }
-  );
+    ],
+  },
+  {
+    headers: {
+      "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
+      "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
 console.log("shipping rate service response:", result.data);
   return result.data as unknown as ShippingRateServiceParams;
 };
