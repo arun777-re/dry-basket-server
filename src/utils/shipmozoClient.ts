@@ -99,63 +99,161 @@ export const shippingRateService = async ({
   return result.data as unknown as ShippingRateServiceParams;
 };
 
+// push order to shipmozo shipping
+// export const pushOrderToShipmozo = async (
+//   data: SHIPMOZOCREATEORDERDTO
+// ): Promise<PUSHORDERTOSHIIPINGRESDTO> => {
+//   console.log("shipozoz key:", process.env.SHIPMOZO_PUBLIC_KEY);
+//   const result = await axios.post(
+//     "https://shipping-api.com/app/api/v1/push-order",
+//     data,
+//     {
+//       headers: {
+//         "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
+//         "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
+//         "Content-Type": "application/json",
+//       },
+//     }
+//   );
+//   return result.data as unknown as PUSHORDERTOSHIIPINGRESDTO;
+// };
+
+// sandbox api to push order to shipmozo shipping
 export const pushOrderToShipmozo = async (
   data: SHIPMOZOCREATEORDERDTO
 ): Promise<PUSHORDERTOSHIIPINGRESDTO> => {
   console.log("shipozoz key:", process.env.SHIPMOZO_PUBLIC_KEY);
-  const result = await axios.post(
-    "https://shipping-api.com/app/api/v1/push-order",
-    data,
-    {
-      headers: {
-        "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
-        "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
-        "Content-Type": "application/json",
+  const result = {
+    data: {
+      success: true,
+      message: "Order pushed successfully (sandbox)",
+      data: {
+        order_id: data.order_id,
+        awb_number: "SBX123456789",
+        courier_id: "courier_sbx_001",
+        tracking_url: "https://sandbox-tracking-url.com/SBX123456789",
       },
-    }
-  );
+    },
+  };
   return result.data as unknown as PUSHORDERTOSHIIPINGRESDTO;
 };
 
 // assign courier for an order
+// export const assignCourierToShipmozo = async (
+//   data: SHIPMOZOASSIGNCOURIERDTO
+// ): Promise<ASSIGNORDERTOSHIIPINGRESDTO> => {
+//   const result = await axios.post(
+//     "https://shipping-api.com/app/api/v1/assign-courier",
+//     data,
+//     {
+//       headers: {
+//         "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
+//         "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
+//         "Content-Type": "application/json",
+//       },
+//     }
+//   );
+//   return result.data as unknown as ASSIGNORDERTOSHIIPINGRESDTO;
+// };
+
+// sandbox assign courier for an order
 export const assignCourierToShipmozo = async (
   data: SHIPMOZOASSIGNCOURIERDTO
 ): Promise<ASSIGNORDERTOSHIIPINGRESDTO> => {
-  const result = await axios.post(
-    "https://shipping-api.com/app/api/v1/assign-courier",
-    data,
-    {
-      headers: {
-        "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
-        "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
-        "Content-Type": "application/json",
+  const result = {
+    data: {
+      success: true,
+      message: "Courier assigned successfully (sandbox)",
+      data: {
+        order_id: data.order_id,
+        awb_number: "SBX123456789",
+        courier_id: data.courier_id,
+        tracking_url: "https://sandbox-tracking-url.com/SBX123456789",
       },
-    }
-  );
+    },
+  };
   return result.data as unknown as ASSIGNORDERTOSHIIPINGRESDTO;
-};
+}
 
 // track order using awb(airwaybill number)
+// export const trackOrderFromShipping = async (
+//   awb: string
+// ): Promise<TRACKORDERSHIPPINGRESDTO> => {
+//   const result = await axios.get(
+//     "https://shipping-api.com/app/api/v1/track-order",
+//     {
+//       params: {
+//         awb_number: awb,
+//       },
+//       headers: {
+//         "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
+//         "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
+//         "Content-Type": "application/json",
+//       },
+//     }
+//   );
+//   return result.data as unknown as TRACKORDERSHIPPINGRESDTO;
+// };
+
+// sanbox track order using awb(airwaybill number)
 export const trackOrderFromShipping = async (
   awb: string
 ): Promise<TRACKORDERSHIPPINGRESDTO> => {
-  const result = await axios.get(
-    "https://shipping-api.com/app/api/v1/track-order",
-    {
-      params: {
+  const result = {
+    data: {
+      success: true,
+      message: "Order tracked successfully (sandbox)",
+      data: {
         awb_number: awb,
+        status: "IN_TRANSIT",
+        history: [
+          {
+            location: "Warehouse A",
+            status: "PICKED_UP",
+            timestamp: "2023-10-01T10:00:00Z",
+          },
+          {
+            location: "Sorting Center",
+            status: "IN_TRANSIT",
+            timestamp: "2023-10-02T14:30:00Z",
+          },
+          {
+            location: "Destination City",
+            status: "OUT_FOR_DELIVERY",
+            timestamp: "2023-10-03T08:15:00Z",
+          },
+        ],
       },
-      headers: {
-        "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
-        "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+    },
+  };
   return result.data as unknown as TRACKORDERSHIPPINGRESDTO;
-};
+}
 
-// cancel order
+// cancel order for shipmozo shipping
+// export const cancelOrder = async ({
+//   orderId,
+//   awb,
+// }: {
+//   orderId: string;
+//   awb: string;
+// }): Promise<CANCELORDERRESDTO> => {
+//   const deleteOrder = await axios.post(
+//     "https://shipping-api.com/app/api/v1/cancel-order",{
+//       awb_number: parseFloat(awb),
+//         order_id: orderId,
+//     },
+//     {
+    
+//       headers: {
+//         "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
+//         "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
+//       },
+//     }
+//   );
+//   return deleteOrder.data;
+// };
+
+// sandbox cancel order
 export const cancelOrder = async ({
   orderId,
   awb,
@@ -163,21 +261,19 @@ export const cancelOrder = async ({
   orderId: string;
   awb: string;
 }): Promise<CANCELORDERRESDTO> => {
-  const deleteOrder = await axios.post(
-    "https://shipping-api.com/app/api/v1/cancel-order",{
-      awb_number: parseFloat(awb),
+  const result = {
+    data: {
+      success: true,
+      message: "Order cancelled successfully (sandbox)",
+      data: {
         order_id: orderId,
-    },
-    {
-    
-      headers: {
-        "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
-        "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
+        awb_number: awb,
+        status: "CANCELLED",
       },
-    }
-  );
-  return deleteOrder.data;
-};
+    },
+  };
+  return result.data as unknown as CANCELORDERRESDTO;
+}
 
 // check pincode serviceability for realtime shipping
 // export const checkPincodeForShipping = async ({
