@@ -122,6 +122,7 @@ export const getShippingRate = async (
       });
       return;
     }
+    // apply will be in original integration
     const bestRate = bestRateCalculator(ClientshippingRates.data);
     if (!bestRate) {
       await cacheServices.del(lockKey);
@@ -133,6 +134,7 @@ export const getShippingRate = async (
       });
       return;
     }
+
     await Promise.all([
       cacheServices.set<ShippingRateResponseDTO>(
         cacheKey,
@@ -154,7 +156,7 @@ export const getShippingRate = async (
     createResponse({
       success: true,
       message: "Shipping rate fetched successfully",
-      data: bestRate?.total_charges,
+      data: bestRate?.total_charges || 0,
       res,
       status: 200,
     });

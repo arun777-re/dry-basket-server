@@ -10,6 +10,51 @@ import {
   TRACKORDERSHIPPINGRESDTO,
 } from "../types/shipping";
 
+export const validPrefixes = ["11", "40", "56", "60", "70", "12", "20", "30", "38","13","14","15","16","17","18","19","21","22","23","24","25","26","27","28","29","31","32","33","34","35","36","37","39","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","57","58","59","61","62","63","64","65","66","67","68","69","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"];
+// for realtime shipping rate calculation
+// export const shippingRateService = async ({
+//   pincode,
+//   weight,
+// }: {
+//   pincode: number;
+//   weight: number;
+// }): Promise<ShippingRateServiceParams> => {
+//   console.log("shipozoz key:", process.env.SHIPMOZO_PUBLIC_KEY);
+//   console.log("pickup pincode:", process.env.PICKUP_PINCODE);
+//  const result = await axios.post(
+//   "https://shipping-api.com/app/api/v1/rate-calculator",
+//   {
+//     pickup_pincode: 131001,
+//     delivery_pincode: pincode,
+//     weight,
+//     payment_mode: "prepaid",
+//     shipment_type: "forward",
+//     order_amount: 1000,
+//     type_of_package: "SPS",
+//     cod_amount: 0,
+//     dimensions: [
+//       {
+//         no_of_box: "1",
+//         length: "22",
+//         width: "10",
+//         height: "10",
+//       },
+//     ],
+//   },
+//   {
+//     headers: {
+//       "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
+//       "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
+//       "Content-Type": "application/json",
+//     },
+//   }
+// );
+
+// console.log("shipping rate service response:", result.data);
+//   return result.data as unknown as ShippingRateServiceParams;
+// };
+
+// sandbox shipping rate service
 export const shippingRateService = async ({
   pincode,
   weight,
@@ -17,38 +62,40 @@ export const shippingRateService = async ({
   pincode: number;
   weight: number;
 }): Promise<ShippingRateServiceParams> => {
-  console.log("shipozoz key:", process.env.SHIPMOZO_PUBLIC_KEY);
-  console.log("pickup pincode:", process.env.PICKUP_PINCODE);
- const result = await axios.post(
-  "https://shipping-api.com/app/api/v1/rate-calculator",
-  {
-    pickup_pincode: 131001,
-    delivery_pincode: pincode,
-    weight,
-    payment_mode: "prepaid",
-    shipment_type: "forward",
-    order_amount: 1000,
-    type_of_package: "SPS",
-    cod_amount: 0,
-    dimensions: [
-      {
-        no_of_box: "1",
-        length: "22",
-        width: "10",
-        height: "10",
-      },
-    ],
-  },
-  {
-    headers: {
-      "public-key": process.env.SHIPMOZO_PUBLIC_KEY,
-      "private-key": process.env.SHIPMOZO_PRIVATE_KEY,
-      "Content-Type": "application/json",
-    },
-  }
-);
-
-console.log("shipping rate service response:", result.data);
+ 
+ const result = {
+    data: {
+      result:1,
+      message:"Success",
+      data:[
+        {
+        "total_charges": 150 + weight * 0.05,
+        "id": "courier_121",
+        "courier_name": "ExpressBees"
+        },
+        {
+        "total_charges": 140 + weight * 0.05,
+        "id": "courier_125",
+        "courier_name": "FastExpress"
+        },
+        {
+        "total_charges": 130 + weight * 0.05,
+        "id": "courier_124",
+        "courier_name": "DTDC"
+        },
+        {
+        "total_charges": 155 + weight * 0.05,
+        "id": "courier_120",
+        "courier_name": "RareX"
+        },
+        {
+        "total_charges": 160 + weight * 0.05,
+        "id": "courier_122",
+        "courier_name": "FedEx"
+        },
+      ]
+ }
+}
   return result.data as unknown as ShippingRateServiceParams;
 };
 
@@ -167,7 +214,7 @@ export const checkPincodeForShipping = async ({
   pickup_pincode: number;
   delivery_pincode: number;
 }): Promise<boolean> => {
- const validPrefixes = ["11", "40", "56", "60", "70", "12", "20", "30", "38","13","14","15","16","17","18","19","21","22","23","24","25","26","27","28","29","31","32","33","34","35","36","37","39","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","57","58","59","61","62","63","64","65","66","67","68","69","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"];
+ 
 
   const isValid =
     String(delivery_pincode).length === 6 &&
