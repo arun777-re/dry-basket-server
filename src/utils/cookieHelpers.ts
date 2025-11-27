@@ -7,7 +7,8 @@ export const setAuthCookies = (res: Response, access: string | null, refresh: st
     httpOnly: true,
     sameSite: "none",
     secure: isProd,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // in ms
+    maxAge:  60 * 60 * 1000, 
+    // 15 min in ms
     path: "/",
   });
 
@@ -15,7 +16,8 @@ export const setAuthCookies = (res: Response, access: string | null, refresh: st
     httpOnly: true,
     sameSite: "none",
     secure: isProd,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000, 
+    // 7 days 
     path: "/",
   });
 };
@@ -27,7 +29,7 @@ export const setAdminAuthCookie = (res:Response,access:string | null)=>{
  httpOnly:true,
  sameSite:"none",
  secure:isProd,
- maxAge:30 * 24 * 60 * 60 * 1000,
+ maxAge:7 * 24 * 60 * 60 * 1000,
  path:"/"
   })
 }

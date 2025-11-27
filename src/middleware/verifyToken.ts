@@ -24,7 +24,7 @@ export const verifyToken = (token: string): Promise<any> => {
   });
 };
 
-// ✅ Verify Admin Token middleware
+//  Verify Admin Token middleware
 export const verifyAdminToken = async (
   req: CustomReq,
   res: Response,
@@ -76,7 +76,7 @@ export const verifyAdminToken = async (
   }
 };
 
-// ✅ Verify User Token middleware
+//  Verify User Token middleware
 export const verifyUserToken = async (
   req: CustomReq,
   res: Response,
@@ -86,11 +86,11 @@ export const verifyUserToken = async (
   try {
     const token = req.cookies.accesstoken;
 
-    // 📌 No access token
+    //  No access token
     if (!token) {
       const refreshToken = req.cookies.refreshtoken;
 
-      // 📌 No refresh token either
+      //  No refresh token either
       if (!refreshToken) {
         if (required) {
           createResponse({
@@ -104,7 +104,7 @@ export const verifyUserToken = async (
         return next();
       }
 
-      // 📌 If refresh token exists
+      //  If refresh token exists
       const user = await getUserFromToken(refreshToken);
       if (!user) {
         if (required) {
@@ -119,7 +119,7 @@ export const verifyUserToken = async (
         return next();
       }
 
-      // 📌 Generate new tokens
+      // Generate new tokens
       const newAccessToken = TokenService.generateAccessToken(
         user._id as string
       );
@@ -127,14 +127,14 @@ export const verifyUserToken = async (
         user._id as string
       );
 
-      // 📌 Set cookies
+      // Set cookies
       setAuthCookies(res, newAccessToken, newRefreshToken);
 
       req.user = user;
       return next();
     }
 
-    // 📌 If access token exists
+    // If access token exists
     const user = await getUserFromToken(token);
 
     if (!user) {
@@ -149,7 +149,7 @@ export const verifyUserToken = async (
       return next();
     }
 
-    // 📌 Optional: mark user as active if needed
+    // Optional: mark user as active if needed
     user.isActive = true;
     await user.save({ validateBeforeSave: false });
 
